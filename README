@@ -1,0 +1,7 @@
+Currently unlicensed, very basic/empty code at this point.
+
+Luawa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes the webserver itself.
+
+The following Lua modules are required (I recommend using Luarocks):
++ lanes
++ luasocket-patch (https://github.com/Fizzadar/luasocket-patch)
