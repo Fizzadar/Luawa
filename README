@@ -1,8 +1,10 @@
 Currently unlicensed, very basic/empty code at this point.
 
-Luawa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes the webserver itself.
+Lua-wa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes the webserver itself, which will work with HTTP GET & POST requests and otherwise be as minimal as possible; designed to be placed behind Apache/nginx/etc which serve the static content.
+
+Planned: database abstraction (mysql & postgresql), user, login & permissions system, lightweight admin, LuaHTML templates, cookie/header functions
 
 The following Lua modules are required (I recommend using Luarocks):
 + Lua (5.1.5 tested), LuaJIT 2 also works
-+ lanes
-+ luasocket-patch (https://github.com/Fizzadar/luasocket-patch)
++ Lua Lanes
++ LuaSocket-patch (https://github.com/Fizzadar/luasocket-patch)
