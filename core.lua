@@ -1,19 +1,30 @@
 --define lua-wa
 luawa = {
-    modules = { 'user', 'debug', 'admin', 'template', 'database', 'utils' }, --all our modules
+    modules = { 'user', 'debug', 'admin', 'template', 'database', 'utils', 'cookie' }, --all our modules
     gets = {},
     posts = {},
     database = {},
-    headers = {},
-    content = {},
+    headers_in = {},
+    headers_out = {},
+    content_out = '',
+    status_codes = {
+        --2xx
+        _200 = 'OK',
+        --3xx
+        _301 = 'Moved',
+        --4xx
+        _404 = 'Not Found',
+        --5xx
+        _501 = 'Server Error'
+    }
 }
 
 --include server
-require( 'lua-wa.server' )
+require( 'lua-wa/server' )
 
 --include files
 for k, v in pairs( luawa.modules ) do
-    require( 'lua-wa.' .. v )
+    require( 'lua-wa/' .. v )
 end
 
 --start luawa app
@@ -62,10 +73,26 @@ function luawa:setConfig( config )
     return true
 end
 
+--process a request from the server
+function luawa:processRequest( request )
+    local response = {
+        status = 200,
+        headers = {},
+        content = '<strong>hi there baw</strong>'
+    }
+    response.headers['Content-Type'] = 'text/html'
+
+    return response
+end
+
 --run a get request
-function luawa:get( input )
+function luawa:get( request, input )
 end
 
 --run a post request
-function luawa:post( input )
+function luawa:post( request, input )
+end
+
+--display an error page
+function luawa:error( type, message )
 end
