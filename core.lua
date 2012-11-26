@@ -82,6 +82,29 @@ function luawa:processRequest( request )
     }
     response.headers['Content-Type'] = 'text/html'
 
+    print( 'REQUEST:' )
+    for k, v in pairs( request ) do
+        print( '  ' .. k .. ' = ' .. tostring( v ) )
+        if type( v ) == 'table' then
+            for c, d in pairs( v ) do
+                print( '    ' .. c .. '=' .. tostring( d ) )
+            end
+        end
+    end
+
+    print( '' )
+    print( 'RESPONSE:' )
+    for k, v in pairs( response ) do
+        print( k .. ' = ' .. tostring( v ) )
+        if type( v ) == 'table' then
+            for c, d in pairs( v ) do
+                print( '    ' .. c .. '=' .. tostring( d ) )
+            end
+        end
+    end
+
+    print( "\n\n==========================\n\n" )
+
     return response
 end
 

@@ -94,7 +94,7 @@ local request = function( fd, luawa )
     until line == nil or line == '' or count >= 50
 
     --feed our request to luawa, get our response
-    local response = luawa.processRequest( request )
+    local response = luawa:processRequest( request )
     response.status, response.headers, response.content = response.status or 200, response.headers or {}, response.content or ''
 
     --send headers to client
@@ -109,16 +109,6 @@ local request = function( fd, luawa )
 
     --close the connection
     client:close()
-
-    for k, v in pairs( request ) do
-        print( k .. ' = ' .. tostring( v ) )
-        if type( v ) == 'table' then
-            for c, d in pairs( v ) do
-                print( c .. ' = ' .. tostring( d ) )
-            end
-        end
-    end
-    print( '' )
 
     return true
 end
@@ -155,12 +145,12 @@ function luawa_server:loop()
         for k, v in pairs( self.lanes ) do
             --remove completed lanes
             if v.status == 'done' then
-                local result = self.lanes[k][1]
+                local result = self.lanes[k][1] --we don't need it, but without lua-lanes *seems* to leak memory (10k requests ~= 400mb)
                 self.lanes[k] = nil
             --remove & log error lanes
             elseif v.status =='error' then
                 luawa.debug:error( 'Error in lane: ' .. tostring( v[1] ) )
-                local result = self.lanes[k][1]
+                local result = self.lanes[k][1] --not needed, see above
                 self.lanes[k] = nil
             end
         end
