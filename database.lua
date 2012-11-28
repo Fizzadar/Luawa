@@ -1,0 +1,2 @@
+--define database
+luawa.database = {}

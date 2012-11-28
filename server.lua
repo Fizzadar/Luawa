@@ -27,10 +27,10 @@ local request = function( fd, luawa )
     local request = {
         version,
         method,
-        path,
+        path = '',
         get = {},
         post = {},
-        hostname,
+        hostname = '',
         cookie = {},
         user_agent,
         user_ip = client:getpeername()
@@ -46,9 +46,9 @@ local request = function( fd, luawa )
 
         --first line should be our request, split into 3
         if count == 1 then
-            local req_bits = luawa.utils.explode( line, ' ' )
+            local req_bits = luawa.utils:explode( line, ' ' )
             req_bits[2], req_bits[3] = req_bits[2] or '', req_bits[3] or ''
-            request.version, request.method = luawa.utils.explode( req_bits[3], '/' )[2] or '0.9', req_bits[1] or 'UKNOWN'
+            request.version, request.method = luawa.utils:explode( req_bits[3], '/' )[2] or '0.9', req_bits[1] or 'UKNOWN'
 
             --not POST or GET? break here
             if request.method ~= 'GET' and request.method ~= 'POST' then
@@ -60,15 +60,15 @@ local request = function( fd, luawa )
             request.path = url_bits.path or '/'
             --query bits
             if url_bits.query then
-                for k, v in pairs( luawa.utils.explode( url_bits.query, '&' ) ) do
-                    local query_bits = luawa.utils.explode( v, '=', 1 )
+                for k, v in pairs( luawa.utils:explode( url_bits.query, '&' ) ) do
+                    local query_bits = luawa.utils:explode( v, '=', 1 )
                     query_bits[2] = query_bits[2] or true
                     request.get[query_bits[1]] = query_bits[2]
                 end
             end
         --rest of the lines split two (header name => value)
         else
-            local head_bits = luawa.utils.explode( line, ' ', 1 )
+            local head_bits = luawa.utils:explode( line, ' ', 1 )
             head_bits[1], head_bits[2] = head_bits[1] or '', head_bits[2] or ''
 
             --user agent?
@@ -83,9 +83,9 @@ local request = function( fd, luawa )
 
             --cookies
             if head_bits[1] == 'Cookie:' then
-                local cookies = luawa.utils.explode( head_bits[2], '; ' )
+                local cookies = luawa.utils:explode( head_bits[2], '; ' )
                 for k, v in pairs( cookies ) do
-                    local cookie_bits = luawa.utils.explode( v, '=' )
+                    local cookie_bits = luawa.utils:explode( v, '=' )
                     cookie_bits[1], cookie_bits[2] = cookie_bits[1] or '', cookie_bits[2] or ''
                     request.cookie[cookie_bits[1]] = cookie_bits[2]
                 end
@@ -93,9 +93,12 @@ local request = function( fd, luawa )
         end
     until line == nil or line == '' or count >= 50
 
-    --feed our request to luawa, get our response
-    local response = luawa:processRequest( request )
-    response.status, response.headers, response.content = response.status or 200, response.headers or {}, response.content or ''
+    --pass our request on to luawa
+    luawa:processRequest( request )
+
+    --get response from luawa
+    local response = luawa.response
+    response.status, response.headers, response.content = response.status or 500, response.headers or {}, response.content or 'Internal Server Error'
 
     --send headers to client
     client:send( 'HTTP/' .. request.version .. ' ' .. tostring( response.status ) .. ' ' .. luawa.status_codes['_' .. response.status] .. "\n" )
@@ -107,7 +110,7 @@ local request = function( fd, luawa )
     --send the content
     client:send( response.content )
 
-    --close the connection
+    --close the connection (no support for keep-alive yet)
     client:close()
 
     return true
@@ -135,7 +138,7 @@ function luawa_server:loop()
         local client = self.server:acceptfd()
         if client then
             --create & add lane to our lanes table
-            table.insert( self.lanes, lanes.gen( 'base,math,package,string,table', request )( client, luawa ) )
+            table.insert( self.lanes, lanes.gen( 'base,io,math,package,string,table', request )( client, luawa ) )
         else
             --hacky sleep for 5ms
             socket.select( nil, nil, 0.005 )

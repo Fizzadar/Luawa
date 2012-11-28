@@ -1,9 +1,8 @@
 luawa.utils = {}
 
-function luawa.utils.explode( str, split_char, num_loops )
-    local strings, i, count = {}, 0, 0
-    str = str or ''
-    num_loops = num_loops or 0
+--similar to php explode (heavy use in server.lua)
+function luawa.utils:explode( str, split_char, num_loops )
+    local strings, i, count, str, num_loops = {}, 0, 0, str or '', num_loops or 0
 
     --loop until we run out of spaces
     repeat
@@ -22,4 +21,21 @@ function luawa.utils.explode( str, split_char, num_loops )
     table.insert( strings, str )
 
     return strings
+end
+
+--return tables and any number of sub-tables as a string
+function luawa.utils:tableString( table, level )
+    local string, table, level = '', table or {}, level or 0
+
+    for k, v in pairs( table ) do
+        for i = 0, level do
+            k = ' ' .. k
+        end
+        string = string .. "\n" .. k .. ' => ' .. tostring( v )
+        if type( v ) == 'table' then
+            string = string .. self:tableString( v, level + 4 )
+        end
+    end
+
+    return string
 end
