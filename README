@@ -5,6 +5,6 @@ Lua-wa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes the w
 Planned: database abstraction (mysql & postgresql), user, login & permissions system, lightweight admin, LuaHTML templates, cookie/header functions
 
 The following Lua modules are required (I recommend using Luarocks):
-+ Lua (5.1.5 tested), LuaJIT 2 also works
++ Lua (5.1.5 tested)
 + Lua Lanes
 + LuaSocket-patch (https://github.com/Fizzadar/luasocket-patch)
