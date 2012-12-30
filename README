@@ -7,7 +7,6 @@ The following Lua modules are required (I recommend using Luarocks to install):
 + LuaSocket-patch (https://github.com/Fizzadar/luasocket-patch)
 + Luasql-mysql (and/or luasql-postgres coming soon)
 
-
 Architecture/Request Flow:
 + n lanes created upon startup
 + Server listens for connectons, which are passed to a linda message queue
