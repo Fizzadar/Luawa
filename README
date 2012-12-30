@@ -1,10 +1,24 @@
-Currently unlicensed, very basic/empty code at this point.
+Lua-wa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes a multi-threaded (lualanes) webserver, which works with HTTP GET & POST requests and otherwise be as minimal as possible; designed to be placed behind Apache/nginx/etc, but can run standalone and be configured to serve static content. All very experimental and built more for education than production.
 
-Lua-wa (Loo-ah-wa) is a web-application 'framework' for Lua. This includes the webserver itself, which will work with HTTP GET & POST requests and otherwise be as minimal as possible; designed to be placed behind Apache/nginx/etc which serve the static content.
-
-Planned: database abstraction (mysql & postgresql), user, login & permissions system, lightweight admin, LuaHTML templates, cookie/header functions
-
-The following Lua modules are required (I recommend using Luarocks):
-+ Lua (5.1.5 tested), LuaJIT 2 also works
+The following Lua modules are required (I recommend using Luarocks to install):
++ Lua (5.1.5 tested) / LuaJIT 2
 + Lua Lanes
++ Lua cjson
 + LuaSocket-patch (https://github.com/Fizzadar/luasocket-patch)
++ Luasql-mysql (and/or luasql-postgres coming soon)
+
+
+Architecture/Request Flow:
++ n lanes created upon startup
++ Server listens for connectons, which are passed to a linda message queue
++ Each lane waits for connections in the queue, when one is received the request is processed by the lane
+
+Caching:
++ App files (gets/posts), template files and static content can be cached
++ Caching is done per-lane, so there's no guarantee of cached content until the number of requests > number of lanes
++ Caching is thus useless for persistent data between individual requests; memcache recommended
++ So, with all caching enabled the maximum RAM usage by the cache is = ( total static content + template functions + app functions ) * number of lanes
+
+Limitations:
++ Only one 'app' per 'server', so to host multiple apps on one IP w/ port 80 nginx/apache will need to run in front with each app on its own port
++ Performance is not heavily tested yet (initial tests seem reasonable w/ caching enabled)
