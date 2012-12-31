@@ -186,8 +186,7 @@ function luawa_server:start()
     return true
 end
 
---everything non-blocking except 5ms of sleep to stop busy wait when processing requests (will wait on socket if no clients)
---loop
+--server loop
 function luawa_server:loop()
     --loop
     while true do

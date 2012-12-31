@@ -22,8 +22,11 @@ luawa = {
     },
     --file extension to mime type
     file_types = {
+        --images
         png = 'image/png',
         jpg = 'image/jpg',
+        ico = 'image/icon',
+        --text
         txt = 'text/plain',
         css = 'text/css'
     },

@@ -11,7 +11,7 @@ The following Lua modules are required (I recommend using Luarocks to install):
 
 ## Docs
 + See https://github.com/Fizzadar/yummymarks for an example app
-+ Check doc/example.conf.lua for all current config options
++ Check example.conf.lua for all current config options
 
 ## Architecture/Request Flow
 + n lanes created upon startup
