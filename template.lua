@@ -1,30 +1,27 @@
 --[[
     file: template.lua
     desc: basic template system for html + api
-]]--
+]]
+local ngx, tostring, pcall, loadstring, io, table, type = ngx, tostring, pcall, loadstring, io, table, type
 
---json driver for api
-json = require( 'cjson.safe' )
-
---define template
-luawa.template = {
+local template = {
     config = {
         dir = 'app/template/',
-        cache = false,
         api = false
     },
     data = {}
 }
 
 --start function
-function luawa.template:_start()
+function template:_start()
+    --api?
     if self.config.api and luawa.request.hostname == self.config.api_host then
         self.api = true
     end
 end
 
 --end function
-function luawa.template:_end()
+function template:_end()
     --if api request output template data as json
     if self.api then
         local out, err = json.encode( self.data )
@@ -35,113 +32,120 @@ function luawa.template:_end()
             luawa.debug:error( err )
         end
     end
+
+    --empty data
+    self.data = {}
 end
 
---add data
-function luawa.template:add( key, value )
+--set data
+function template:set( key, value )
     self.data[key] = value
 end
 
 --get data (dump all when no key)
-function luawa.template:get( key )
+function template:get( key )
     if not key then return self.data end
     return self.data[key]
 end
 
 --clear data
-function luawa.template:clear()
+function template:clear()
     self.data = {}
 end
 
 --load a lhtml file, convert code to lua, run and add string to end of response.content
-function luawa.template:load( file )
-    --cancel if api mode
-    if self.api then return true end
+function template:load( file, inline )
+    --token check
+    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken() ) end
 
-    --vars
-    local string, code, mode = '', 'local self, code_str = luawa.template, {}', 'html'
+    --attempt to get cache_id
+    local cache_id = ngx.shared.cache_template:get( file )
+    local func
 
-    --cache?
-    local func, err
-    if self.config.cache and luawa.cache.template[file] then
-        func, err = luawa.cache.template[file], 'Failed to load template: ' .. file .. ' from cache'
-        if func then luawa.debug:message( 'Template function loaded from cache: ' .. file ) end
-    else
-        --open file
-        local f, e = io.open( self.config.dir .. file .. '.lhtml', 'r' )
-        if not f then return false, 'Failed to load file: ' .. self.config.dir .. file .. '.lhtml: ' .. e end
-
-        --loop file line by line
-        repeat
-            string = f:read( '*l' )
-            --time to rewrite the string + append to code
-            if string then
-                local s, f, m = 0, -1, mode
-                string = luawa.utils:trim( string )
-                --opening tag?
-                if string:sub( 0, 2 ) == '<?' and string:sub( 0, 3 ) ~= '<?=' then
-                    m, mode = 'lua', 'lua'
-                    --closing on this line? add as code
-                    if string:sub( -2 ) == '?>' then
-                        s, f = 3, string:len() - 2
-                        mode = 'html' --set mode for next loop
-                    else
-                        s = 3 --no closing lua tag
-                    end
-                --does this line end an lua block?
-                elseif m == 'lua' and string:sub( -2 ) == '?>' then
-                    f = string:len() - 2
-                    mode = 'html' --set mode
-                end
-
-                --add the code (lua mode)
-                if m == 'lua' then
-                    code = code .. "\n" .. string:sub( s, f )
-                --html mode
-                elseif m == 'html' and string:len( string:sub( s, f ) ) > 0 then
-                    --find & replace any <?=CHARS ?> with " .. CHARS .. "
-                    string = string:gsub( '(%<%?=([\'%[%]%:%.%a%s%(%)]+)%s%?%>)', '" .. tostring( %2 ) .. "' )
-                    code = code .. "\n" .. 'table.insert( code_str, "' .. string .. '" )'
-                end
-            end
-        until string == nil
-
+    --not cached?
+    if not cache_id then
+        --read app file
+        local f, err = io.open( luawa.root_dir .. self.config.dir .. file .. '.lhtml', 'r' )
+        if not f then return luawa:error( 500, 'Cant open/access file: ' .. err ) end
+        --read the file
+        local string, err = f:read( '*a' )
+        if not string then return luawa:error( 500, 'File read error: ' .. err ) end
         --close file
         f:close()
-        
-        --end bit of code
-        code = code .. "\nlocal output = ''"
-        code = code .. "\nfor k, v in pairs( code_str ) do"
-        code = code .. "\noutput = output .. v end"
-        code = code .. "\nreturn output"
 
-        --compile function
-        func, err = loadstring( code )
+        --process string lhtml => lua
+        string = self:process( string )
+        --prepend some stuff
+        string = 'local function luawa_template()\n\n' .. string
+        --append
+        string = string .. '\n\nend return luawa_template'
 
-        --cache
-        if self.config.cache then
-            table.insert( luawa.response.cache, { cache = 'template', key = file, value = func } )
+        --generate cache_id
+        cache_id = self.config.dir:gsub( '/', '_' ) .. file:gsub( '/', '_' )
+
+        --cache?
+        if luawa.cache then
+            --now let's save this as a file
+            local f, err = io.open( luawa.root_dir .. 'luawa/cache/' .. cache_id .. '.lua', 'w+' )
+            if not f then return luawa:error( 500, 'File error: ' .. err ) end
+            --write to file
+            local status = f:write( string )
+            if not status then return luawa:error( 500, 'File write error: ' .. err ) end
+            --close file
+            f:close()
+
+            ngx.shared.cache_template:set( file, cache_id )
+        else
+            func = loadstring( string )()
+            if not func then return luawa:error( 500, err ) end
         end
     end
 
-    local out
-    if func then
-        local status, string = pcall( func )
+    --require file & call safely
+    func = func or require( 'luawa/cache/' .. cache_id )
+    local status, err = pcall( func )
 
-        if status then
-            out = string
+    --if ok, add to output
+    if status then
+        if inline then
+            return err
         else
-            luawa.debug:error( 'Template error: ' .. string )
-            return false, string
+            luawa.response = luawa.response .. err
         end
     else
-        luawa.debug:error( 'Template error: could not compile: ' .. tostring( err ) )
-        return false, 'Could not compile: ' .. tostring( err )
-    end
-
-    --add the content to response
-    if out then
-    	luawa.response.content = luawa.response.content .. out
-        return true
+        return false, 'Template error: ' .. err
     end
 end
+
+--function to work before tostring
+function template:toString( string )
+    --nil returns blank
+    if string == nil then return 'nil' end
+    --string as string
+    if type( string ) == 'string' then return string end
+    --otherwise as best
+    return tostring( string )
+end
+
+--turn file => lua
+function template:process( code )
+    --trim html?
+    if self.config.trim then code = code:gsub( '[\t\n]', '' ) end
+
+    --prepend bits
+    code = 'local self, output = luawa.template, "" output = output .. [[' .. code
+    --replace <?=vars?>
+    code = code:gsub( '<%?=([,/_\'%[%]%:%.%a%s%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
+    --replace <? to close output, start raw lua
+    code = code:gsub( '<%?', ']] ' )
+    --replace ?> to stop lua and start output (in table)
+    code = code:gsub( '%?>', ' output = output .. [[' )
+    --close final output and return concat of the table
+    code = code .. ' ]] return output'
+
+    return code
+end
+
+
+--return
+return template

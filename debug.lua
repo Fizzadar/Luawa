@@ -1,71 +1,62 @@
 --[[
     file: debug.lua
     desc: debug
-]]--
-luawa.debug = {
-    config = {
-        silent = false,
-        log = false,
-        log_dir = 'logs/'
-    },
-    log_files = {}
+]]
+local lua_debug = debug
+
+local debug = {
+    config = {},
+    logs = {
+        messages = {},
+        errors = {},
+        accesses = {},
+        queries = {}
+    }
 }
 
---end function (close open log files)
-function luawa.debug:_end()
-    for k, v in pairs( self.log_files ) do
-        v:close()
+--end special end not _end
+function debug:__end()
+    --include debug?
+    if self.config.enabled then
+        luawa.template.config.dir = 'luawa/'
+        luawa.template:set( 'logs', self.logs )
+       local status, err = luawa.template:load( 'debug' )
+       luawa.response = luawa.response .. tostring( err )
     end
 end
 
 --basic debug message
-function luawa.debug:message( message )
-    if not self.config.silent and not self.config.silent_message then
-        print( '[Lua-WA]: [' .. os.date( '%H:%M' ) ..  '] ' .. tostring( message ) )
-    end
-
-    --log?
-    if self.config.log and self.config.log_message then
-        self:log( 'message', message )
+function debug:message( message )
+    if self.config.enabled then
+        table.insert( self.logs.messages, { text = message } )
     end
 end
 
 --basic error message
-function luawa.debug:error( message )
-    if not self.config.silent and not self.config.silent_error then
-        print( '[Lua-WA Error]: [' .. os.date( '%H:%M' ) ..  '] ' .. tostring( message ) )
+function debug:error( message )
+    if self.config.enabled then
+        table.insert( self.logs.errors, { text = message, stack = lua_debug.traceback() } )
     end
+end
 
-    --log?
-    if self.config.log and self.config.log_error then
-        self:log( 'error', message )
+--query message
+function debug:query( message )
+    if self.config.enabled then
+        table.insert( self.logs.queries, { text = message } )
     end
 end
 
 --access message
-function luawa.debug:access( message, request )
+function debug:access( message, request )
     if type( request ) == 'table' then
-        message = message .. 'URL: ' .. request.hostname .. '/' .. request.path .. ' / IP: ' .. request.user_ip .. ' / UserAgent: ' .. tostring( request.user_agent )
+        message = message .. 'URL: ' .. request.hostname .. request.path .. ' / IP: ' .. request.user_ip .. ' / UserAgent: ' .. tostring( request.user_agent )
     end
 
-    if not self.config.silent and not self.config.silent_access then
-        print( '[Lua-WA Access]: [' .. os.date( '%c' ) ..  '] ' .. tostring( message ) )
-    end
-
-    --log?
-    if self.config.log and self.config.log_access then
-        self:log( 'access', message )
+    if self.config.enabled then
+        table.insert( self.logs.messages, { text = message } )
     end
 end
 
---log to file
-function luawa.debug:log( key, message )
-    --if we haven't already opened this file
-    if self.log_files[key] == nil then
-        self.log_files[key] = io.open( self.config.log_dir .. key .. '.log', 'a+' ) or false
-    end
-    --now we have the file, write
-    if self.log_files[key] then
-        self.log_files[key]:write( message .. "\n" )
-    end
-end
+
+
+return debug

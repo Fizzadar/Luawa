@@ -2,50 +2,21 @@
     file: core.lua
     desc: main luawa file
         most importantly takes http requests as a table and returns a response as a table
-]]--
-luawa = {
+]]
+--local optimization
+local pairs = pairs
+local require = require
+local loadstring = loadstring
+local pcall = pcall
+local type = type
+local tostring = tostring
+local io = io
+local ngx = ngx
+
+local luawa = {
     config_file = 'config',
-    modules = { 'user', 'debug', 'admin', 'template', 'database', 'utils', 'header' }, --all our modules
-    gets = {},
-    posts = {},
-    --http status codes
-    status_codes = {
-        --2xx
-        [200] = 'OK',
-        --3xx
-        [301] = 'Moved Permanently',
-        --4xx
-        [400] = 'Bad Request',
-        [404] = 'Not Found',
-        --5xx
-        [500] = 'Internal Server Error'
-    },
-    --file extension to mime type
-    file_types = {
-        --images
-        png = 'image/png',
-        jpg = 'image/jpg',
-        ico = 'image/icon',
-        --text
-        txt = 'text/plain',
-        css = 'text/css'
-    },
-    request = {},
-    response = {},
-    cache = {
-        app = {},
-        template = {},
-        static = {}
-    }
+    modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
 }
-
---include server
-require( 'lua-wa/server' )
-
---include files
-for k, v in pairs( luawa.modules ) do
-    require( 'lua-wa/' .. v )
-end
 
 --start luawa app
 function luawa:start()
@@ -61,45 +32,29 @@ end
 
 --set the config
 function luawa:setConfig( file )
-    --check if file set, overwrite self value
-    file = file or self.config_file
-    self.config_file = file
-
-    --load the file (must return)
-    local config = dofile( file .. '.lua' )
-
-    --check we have all we need
-    if not config.gets or not config.posts or not config.server then
-        self.debug:error( 'No gets or posts, no point running server' )
-        return false
+    --include modules
+    for k, v in pairs( luawa.modules ) do
+        luawa[v] = require( 'luawa/' .. v )
     end
 
-    --loop through gets & posts, convert to correct format luawa.gets|posts[path]=info
-    for k, v in pairs( config.gets ) do
-        self.gets[v.path] = { file = v.file }
-        if v.func then self.gets[v.path].func = v.func end
-    end
-    for k, v in pairs( config.posts ) do
-        self.posts[v.path] = { file = v.file }
-        if v.func then self.posts[v.path].func = v.func end
-    end
+    --set config
+    self.config_file = file or 'config'
 
-    --dev mode?
-    self.dev_mode = config.dev_mode or false
+    --load the config file (must return)
+    local config = require( file )
 
-    --function caching?
-    self.cache_app = config.cache_app or false
+    --set get/post
+    self.gets = config.gets or {}
+    self.posts = config.posts or {}
 
-    --static serving?
-    self.serve_static = config.serve_static or false
-    self.cache_static = config.cache_static or false
+    --hostname?
+    self.hostname = config.hostname or ''
 
-    --server config (check as we're not always called w/ luawa_server)
-    if luawa_server then
-        for k, v in pairs( config.server ) do
-            luawa_server.config[k] = v
-        end
-    end
+    --cache?
+    self.cache = config.cache
+
+    --root dir?
+    self.root_dir = config.root_dir or ''
 
     --module config
     for k, v in pairs( self.modules ) do
@@ -115,162 +70,164 @@ function luawa:setConfig( file )
     return true
 end
 
---process a request from the server
-function luawa:processRequest( request )
-    --luawa dev mode: re-include all luawa modules each request to reload 'em
-    if self.dev_mode then
-        luawa = self
-        for k, v in pairs( self.modules ) do
-            dofile( 'lua-wa/' .. v .. '.lua' )
-            self:setConfig()
-        end
+--run luawa (if we're nginx processRequest, if cli setServerConfig)
+function luawa:run()
+    if not ngx then
+        return self:setServerConfig()
+    else
+        return self:processRequest()
     end
+end
 
-    --set request & log
-    self.request = request;
-    self.debug:access( '', self.request )
+--generate nginx config
+function luawa:setServerConfig()
+    if true then
+        local handle = io.popen( 'pwd' )
+        local result = handle:read( '*a' )
+        handle:close()
+        print(result)
+        return
+    end
+end
 
-    --default response
-    self.response = {
-        status = 200,
-        headers ={
-            ['Content-Type'] = 'text/html',
-            ['Set-Cookie'] = {}
-        },
-        content = '',
-        cache = {}
-    }
+--process a request from the server
+function luawa:processRequest()
+    --start response
+    self.response = ''
 
-    --modules break if not done
-    _G.luawa = self
+    --start request
+    local request = {
+        method = ngx.req.get_method(),
+        headers = ngx.req.get_headers(),
+        get = ngx.req.get_uri_args(),
+        post = {},
+        cookie = {}
+    };
 
-    --loop modules & run any start functions
-    for k, v in pairs( self.modules ) do
-        if self[v]._start then
-            self[v]:_start()
-        end
+    --always get first ?request
+    if type( request.get.request ) == 'table' then
+        request.get.request = request.get.request[1]
     end
 
     --find our response
     local res
-    if request.method == 'GET' and self.gets[request.path] then
-        res = self.gets[request.path]
-    elseif request.method == 'POST' and self.posts[request.path] then
-        res = self.posts[request.path]
-    else
-        --static serving?
-        if self.serve_static then
-            --remove any ..'s from our path
-            request.path:gsub( '%.%.', '' )
-            --work out extension
-            local a, b, ext = request.path:find( '[^%.]%.([%w]+)' )
-            if self.file_types[ext] then
-                --cached static content?
-                if self.cache_static and self.cache.static[request.path] then
-                    --content, header, done!
-                    self.response.content = self.cache.static[request.path]
-                    self.header:setHeader( 'Content-Type', self.file_types[ext] )
-                    --debug
-                    self.debug:message( 'Content loaded from cache: ' .. request.path )
-                    return
-                else
-                    --try to open file
-                    local f, e = io.open( '.' .. request.path, 'r' )
-                    if f then
-                        --set content + content type
-                        self.response.content = f:read( '*a' )
-                        self.header:setHeader( 'Content-Type', self.file_types[ext] )
-                        f:close()
-
-                        --caching?
-                        if self.cache_static then
-                            table.insert( self.response.cache, { cache = 'static', key = request.path, value = self.response.content } )
-                        end
-                        return
-                    end
-                end
-            end
-        end
-
-        --invalid request
-        return self:error( 500, 'Invalid Request: ' .. request.path )
+    if request.method == 'GET' then
+        res = self.gets[request.get.request] or self.gets.default
+    elseif request.method == 'POST' then
+        res = self.posts[request.get.request] or self.posts.default
+        --setup post args
+        ngx.req.read_body()
+        request.post = ngx.req.get_post_args()
     end
 
-    --set data
-    local file = res.file .. '.lua'
-    self.request.func = res.func
+    --invalid request
+    if not res then
+        return self:error( 500, 'Invalid Request: ' .. request.get.request )
+    end
 
-    --caching?
-    local func, err
-    if self.cache_app and self.cache.app[request.path] then
-        func = self.cache.app[request.path]
-        if not func then
-            self.debug:error( 'Cache load failed on: ' .. file .. ', cached: ' .. tostring( self.cache.app[request.path] ) )
-        else
-            self.debug:message( 'App function loaded from cache: ' .. request.path )
+    --set file correctly
+    local file = res.file
+    request.args = res.args or {}
+
+    --split/set cookies
+    if request.headers.cookie then
+        for k, v in request.headers.cookie:gmatch( '([^;]+)' ) do
+            local a, b, key, value = k:find( '([^=]+)=([^=]+)')
+            request.cookie[luawa.utils:trim( key )] = value
         end
     end
 
-    --function not set
-    if not func then
-        --try to open the file
-        local f, e = io.open( file, 'r' )
-        if not f then return self:error( 500, 'Cant find/open file: ' .. e ) end
+    --set function & request
+    request.func = request.get.request or 'default'
+    self.request = request
+
+    --start modules
+    for k, v in pairs( self.modules ) do
+        if self[v]._start then self[v]:_start() end
+    end
+
+    --process the file
+    self:processFile( file )
+
+    --debug module first (special end)
+    self.debug:__end()
+
+    --end modules
+    for k, v in pairs( self.modules ) do
+        if self[v]._end then self[v]:_end() end
+    end
+
+    --finally send response content
+    ngx.say( self.response )
+end
+
+--process a file
+function luawa:processFile( file )
+    --try to fetch cache id
+    local cache_id = ngx.shared.cache_app:get( file )
+    local func
+
+    --not cached?
+    if not cache_id then
+        --read app file
+        local f, err = io.open( self.root_dir .. file .. '.lua', 'r' )
+        if not f then return self:error( 500, 'Cant open/access file: ' .. err ) end
         --read the file
-        local s, e = f:read( '*a' )
-        if not s then return self:error( 500, 'File read error: ' .. e ) end
-
+        local string, err = f:read( '*a' )
+        if not string then return self:error( 500, 'File read error: ' .. err ) end
         --close file
         f:close()
-        
-        --compile the string
-        func, err = loadstring( s )
 
-        --cache it if functions is valid & caching enabled
-        if func and self.cache_app then
-            --add cache functo file, server handles (sends to master via linda)
-            table.insert( self.response.cache, { cache = 'app', key = request.path, value = func } )
+        --prepend some stuff
+        string = 'local function luawa_app()\n\n' .. string
+        --append
+        string = string .. '\n\nend return luawa_app'
+
+        --generate cache_id
+        cache_id = file:gsub( '/', '_' )
+
+        --cache?
+        if self.cache then
+            --now let's save this as a file
+            local f, err = io.open( self.root_dir .. 'luawa/cache/' .. cache_id .. '.lua', 'w+' )
+            if not f then return self:error( 500, 'File error: ' .. err ) end
+            --write to file
+            local status = f:write( string )
+            if not status then return self:error( 500, 'File write error: ' .. err ) end
+            --close file
+            f:close()
+
+            --save to cache
+            ngx.shared.cache_app:set( file, cache_id )
+        else
+            func, err = loadstring( string )()
+            if not func then return self:error( 500, err ) end
         end
     end
 
-    --nil function/no file?
-    if func then
-        --make new environment based of current
-        local env = {}
-        --set request
-        _G.request = self.request
-        --attach metatable to table & set env
-        setmetatable( env, { __index = _G } )
-        setfenv( func, env )
+    --require file, call it safely
+    func = func or require( 'luawa/cache/' .. cache_id )
+    local status, err = pcall( func )
 
-        --result
-        local status, err = pcall( func )
-
-        --problem?
-        if not status then
-            self:error( 500, 'Request: ' .. request.path .. ' / Error: ' .. err )
-        end
-    else
-        self:error( 500, 'Problem with the request: ' .. request.path .. ' :: ' .. err )
+    --error?
+    if not status then
+        self:error( 500, 'Request error: ' .. err )
     end
 
-    --loop modules & run any end functions
-    for k, v in pairs( self.modules ) do
-        if self[v]._end then
-            self[v]:_end()
-        end
-    end
+    --done!
+    return
 end
 
 --display an error page
 function luawa:error( type, message )
-    self.response.status = type
-    self.response.content = message
-
     self.debug:error( 'Status: ' .. type .. ' / message: ' .. tostring( message ) )
+
+    --hacky
+    self.response = ''
+    self.template.config.dir = 'luawa/'
+    self.template:load( 'error' )
 end
 
---run a server command
-function luawa:serverControl( code )
-    self.response.server_control = code
-end
+
+--return
+return luawa
