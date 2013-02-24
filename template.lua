@@ -102,7 +102,7 @@ function template:load( file, inline )
     end
 
     --require file & call safely
-    func = func or require( 'luawa/cache/' .. cache_id )
+    func = func or require( luawa.root_dir .. 'luawa/cache/' .. cache_id )
     local status, err = pcall( func )
 
     --if ok, add to output

@@ -6,7 +6,7 @@ local pairs = pairs
 local type = type
 local tostring = tostring
 local ngx = ngx
-local mysql = require( 'luawa/lib/mysql' )
+local mysql = require( luawa.root_dir .. 'luawa/lib/mysql' )
 
 local database = {
     config = {

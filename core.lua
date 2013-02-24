@@ -31,17 +31,17 @@ function luawa:start()
 end
 
 --set the config
-function luawa:setConfig( file )
-    --include modules
-    for k, v in pairs( luawa.modules ) do
-        luawa[v] = require( 'luawa/' .. v )
-    end
-
-    --set config
+function luawa:setConfig( dir, file )
+    self.root_dir = dir or ''
     self.config_file = file or 'config'
 
     --load the config file (must return)
-    local config = require( file )
+    local config = require( dir .. file )
+
+    --include modules
+    for k, v in pairs( luawa.modules ) do
+        luawa[v] = require( dir .. 'luawa/' .. v )
+    end
 
     --set get/post
     self.gets = config.gets or {}
@@ -52,9 +52,6 @@ function luawa:setConfig( file )
 
     --cache?
     self.cache = config.cache
-
-    --root dir?
-    self.root_dir = config.root_dir or ''
 
     --module config
     for k, v in pairs( self.modules ) do
@@ -206,7 +203,7 @@ function luawa:processFile( file )
     end
 
     --require file, call it safely
-    func = func or require( 'luawa/cache/' .. cache_id )
+    func = func or require( self.root_dir .. 'luawa/cache/' .. cache_id )
     local status, err = pcall( func )
 
     --error?

@@ -2,7 +2,7 @@
     file: email.lua
     desc: email sending
 ]]
-local smtp = require( 'luawa/lib/smtp' )
+local smtp = require( luawa.root_dir .. 'luawa/lib/smtp' )
 
 local email = {
     config = {
