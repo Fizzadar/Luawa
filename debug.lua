@@ -20,8 +20,7 @@ function debug:__end()
     if self.config.enabled then
         luawa.template.config.dir = 'luawa/'
         luawa.template:set( 'logs', self.logs )
-       local status, err = luawa.template:load( 'debug' )
-       luawa.response = luawa.response .. tostring( err )
+        luawa.template:load( 'debug' )
     end
 end
 

@@ -72,6 +72,11 @@ function luawa:run()
     if not ngx then
         return self:setServerConfig()
     else
+        --setup fail?
+        if not luawa:prepareRequest() then
+            return self:error( 500, 'Invalid Request' )
+        end
+
         return self:processRequest()
     end
 end
@@ -87,8 +92,8 @@ function luawa:setServerConfig()
     end
 end
 
---process a request from the server
-function luawa:processRequest()
+--prepare a request
+function luawa:prepareRequest()
     --start response
     self.response = ''
 
@@ -119,12 +124,12 @@ function luawa:processRequest()
 
     --invalid request
     if not res then
-        return self:error( 500, 'Invalid Request: ' .. request.get.request )
+        return false
     end
 
     --set file correctly
-    local file = res.file
     request.args = res.args or {}
+    request.file = res.file
 
     --split/set cookies
     if request.headers.cookie then
@@ -136,15 +141,22 @@ function luawa:processRequest()
 
     --set function & request
     request.func = request.get.request or 'default'
+
+    --set request
     self.request = request
 
+    return true
+end
+
+--process a request from the server
+function luawa:processRequest()
     --start modules
     for k, v in pairs( self.modules ) do
         if self[v]._start then self[v]:_start() end
     end
 
     --process the file
-    self:processFile( file )
+    local result = self:processFile( self.request.file )
 
     --debug module first (special end)
     self.debug:__end()
@@ -212,7 +224,7 @@ function luawa:processFile( file )
     end
 
     --done!
-    return
+    return true
 end
 
 --display an error page
@@ -223,6 +235,10 @@ function luawa:error( type, message )
     self.response = ''
     self.template.config.dir = 'luawa/'
     self.template:load( 'error' )
+
+    ngx.say( self.response )
+
+    return false
 end
 
 

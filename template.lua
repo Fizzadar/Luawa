@@ -108,9 +108,10 @@ function template:load( file, inline )
     --if ok, add to output
     if status then
         if inline then
-            return err
+            return true
         else
             luawa.response = luawa.response .. err
+            return true
         end
     else
         return false, 'Template error: ' .. err

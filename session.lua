@@ -54,6 +54,7 @@ end
 
 --get/generate token
 function session:getToken()
+    if true then return 'fu' end
     local token = self:get( 'token' )
     --generate token
     if not token then
