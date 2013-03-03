@@ -2,6 +2,8 @@
     file: template.lua
     desc: basic template system for html + api
 ]]
+--json & hashing
+local json = require( 'cjson.safe' )
 local ngx, tostring, pcall, loadstring, io, table, type = ngx, tostring, pcall, loadstring, io, table, type
 
 local template = {
@@ -20,6 +22,12 @@ function template:_start()
     end
 end
 
+--special start
+function template:__start()
+    --token check
+    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken(), true ) end --good to have them on api?
+end
+
 --end function
 function template:_end()
     --if api request output template data as json
@@ -27,19 +35,22 @@ function template:_end()
         local out, err = json.encode( self.data )
         if out then
             luawa.header:setHeader( 'Content-Type', 'text/json' )
-            luawa.response.content = out
+            luawa.response = out
         else
             luawa.debug:error( err )
         end
     end
-
-    --empty data
-    self.data = {}
 end
 
 --set data
-function template:set( key, value )
-    self.data[key] = value
+function template:set( key, value, api )
+    --not api, set as normal
+    if not self.api then
+        self.data[key] = value
+    --if api, must be allowed in function
+    elseif api then
+        self.data[key] = value
+    end
 end
 
 --get data (dump all when no key)
@@ -53,10 +64,16 @@ function template:clear()
     self.data = {}
 end
 
+--add raw code to current output
+function template:put( content )
+    if self.api then return end
+
+    luawa.response = luawa.response .. tostring( content )
+end
+
 --load a lhtml file, convert code to lua, run and add string to end of response.content
 function template:load( file, inline )
-    --token check
-    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken() ) end
+    if self.api then return true end
 
     --attempt to get cache_id
     local cache_id = ngx.shared.cache_template:get( file )
@@ -76,9 +93,9 @@ function template:load( file, inline )
         --process string lhtml => lua
         string = self:process( string )
         --prepend some stuff
-        string = 'local function luawa_template()\n\n' .. string
+        string = 'local function _luawa_template()\n\n' .. string
         --append
-        string = string .. '\n\nend return luawa_template'
+        string = string .. '\n\nend return _luawa_template'
 
         --generate cache_id
         cache_id = self.config.dir:gsub( '/', '_' ) .. file:gsub( '/', '_' )
@@ -134,15 +151,15 @@ function template:process( code )
     if self.config.trim then code = code:gsub( '[\t\n]', '' ) end
 
     --prepend bits
-    code = 'local self, output = luawa.template, "" output = output .. [[' .. code
+    code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
     code = code:gsub( '<%?=([,/_\'%[%]%:%.%a%s%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
     --replace <? to close output, start raw lua
     code = code:gsub( '<%?', ']] ' )
     --replace ?> to stop lua and start output (in table)
-    code = code:gsub( '%?>', ' output = output .. [[' )
+    code = code:gsub( '%?>', ' _output = _output .. [[' )
     --close final output and return concat of the table
-    code = code .. ' ]] return output'
+    code = code .. ' ]] return _output'
 
     return code
 end
