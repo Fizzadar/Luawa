@@ -39,7 +39,10 @@ function template:_end()
         else
             luawa.debug:error( err )
         end
+        self.api = false
     end
+
+    self:clear()
 end
 
 --set data
