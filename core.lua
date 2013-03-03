@@ -16,6 +16,7 @@ local ngx = ngx
 local luawa = {
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
+    response = ''
 }
 
 --start luawa app
@@ -55,7 +56,7 @@ function luawa:setConfig( dir, file )
 
     --module config
     for k, v in pairs( self.modules ) do
-        if config[v] then
+        if type( config[v] ) == 'table' then
             if not self[v].config then self[v].config = {} end
             --set values
             for c, d in pairs( config[v] ) do
@@ -67,44 +68,29 @@ function luawa:setConfig( dir, file )
     return true
 end
 
---run luawa (if we're nginx processRequest, if cli setServerConfig)
+--run luawa
 function luawa:run()
-    if not ngx then
-        return self:setServerConfig()
-    else
-        --setup fail?
-        if not luawa:prepareRequest() then
-            return self:error( 500, 'Invalid Request' )
-        end
-
-        return self:processRequest()
+    --setup fail?
+    if not luawa:prepareRequest() then
+        return self:error( 500, 'Invalid Request' )
     end
-end
-
---generate nginx config
-function luawa:setServerConfig()
-    if true then
-        local handle = io.popen( 'pwd' )
-        local result = handle:read( '*a' )
-        handle:close()
-        print(result)
-        return
-    end
+    --go!
+    return self:processRequest()
 end
 
 --prepare a request
 function luawa:prepareRequest()
-    --start response
-    self.response = ''
-
     --start request
     local request = {
+        remote_addr = ngx.var.remote_addr,
         method = ngx.req.get_method(),
         headers = ngx.req.get_headers(),
         get = ngx.req.get_uri_args(),
         post = {},
         cookie = {}
     };
+    --set hostname
+    request.hostname = request.headers.host or self.hostname
 
     --always get first ?request
     if type( request.get.request ) == 'table' then
@@ -155,6 +141,9 @@ function luawa:processRequest()
         if self[v]._start then self[v]:_start() end
     end
 
+    --template module first (special start) - gets token from session
+    self.template:__start()
+
     --process the file
     local result = self:processFile( self.request.file )
 
@@ -188,9 +177,9 @@ function luawa:processFile( file )
         f:close()
 
         --prepend some stuff
-        string = 'local function luawa_app()\n\n' .. string
+        string = 'local function _luawa_app()\n\n' .. string
         --append
-        string = string .. '\n\nend return luawa_app'
+        string = string .. '\n\nend return _luawa_app'
 
         --generate cache_id
         cache_id = file:gsub( '/', '_' )
