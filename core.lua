@@ -16,7 +16,7 @@ local ngx = ngx
 local luawa = {
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
-    response = ''
+    response = '<!--the first request is always special-->'
 }
 
 --start luawa app
@@ -155,8 +155,9 @@ function luawa:processRequest()
         if self[v]._end then self[v]:_end() end
     end
 
-    --finally send response content
+    --finally send response content & remove it
     ngx.say( self.response )
+    self.response = ''
 end
 
 --process a file
