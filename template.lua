@@ -134,7 +134,7 @@ function template:load( file, inline )
             return true
         end
     else
-        return false, 'Template error: ' .. err
+        return luawa:error( 500, err )
     end
 end
 
