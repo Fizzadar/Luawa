@@ -27,11 +27,13 @@ end
 
 --generate a password from text + salt
 function user:generatePassword( password, salt )
+	if not password or password == '' then return false end
+
 	--start with salt & secret
 	local str = salt .. self.config.secret
 	--loop strength times (increase rainbow table calculation time)
 	--each loop inputs the users password
-	for i = 0, self.config.strength do
+	for i = 1, self.config.strength do
 		str = self.utils:digest( str .. password )
 	end
 	return str
@@ -93,7 +95,7 @@ function user:resetPasswordLogin( email, key )
 	)
 	if not status then return false, err end
 
-	--login the user with their OLD/current password, app should redirect
+	--login the user with their OLD/current password, app should redirect to settings/changepw page
 	return self:login( email, user[1].password, true )
 end
 
@@ -108,11 +110,21 @@ function user:register( email, password, name )
 	--hash password
 	password = self:generatePassword( password, salt )
 
+	--default fields & users
+	local fields = { 'email', 'password', 'salt', 'name', 'register_time' }
+	local user = { email, password, salt, name, os.time() }
+
+	--generate n keys
+	for i = 1, self.config.strength do
+		table.insert( fields, 'key' .. i )
+		table.insert( user, self:generateKey( password ) )
+	end
+
 	--insert user
 	local result, err = self.db:insert(
 		self.config.dbprefix .. 'user',
-		{ 'email', 'password', 'salt', 'name', 'key', 'register_time' },
-		{ { email, password, salt, name, key, os.time() } }
+		fields,
+		{ user }
 	)
 
 	--success?
@@ -143,18 +155,24 @@ function user:login( email, password, hashed )
 
 		--reload key?
 		if self.config.reload_key then
-			self.user.key = self.utils:digest( self.utils:randomString( 32 ) )
-			update.key = self.user.key
+			for i = 1, self.config.strength do
+				local key = self:generateKey( self.utils:randomString( 32 ) )
+				self.user['key' .. i] = key
+				update['key' .. i] = key
+			end
 		end
 
 		--update user
 		self:setData( update )
 
-
-		--set cookies
+		--set id/name cookies
 		self.head:setCookie( self.config.prefix .. 'id', self.user.id, self.config.expire )
-		self.head:setCookie( self.config.prefix .. 'key', self.user.key, self.config.expire )
 		self.head:setCookie( self.config.prefix .. 'name', self.user.name, self.config.expire )
+
+		--set key cookies
+		for i = 1, self.config.strength do
+			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+		end
 
 		--get permissions for cookie
 		local permissions = self.db:select(
@@ -188,9 +206,13 @@ function user:logout()
 
 	--delete cookies
 	self.head:deleteCookie( self.config.prefix .. 'id' )
-	self.head:deleteCookie( self.config.prefix .. 'key' )
 	self.head:deleteCookie( self.config.prefix .. 'name' )
 	self.head:deleteCookie( self.config.prefix .. 'permissions' )
+
+	--delete key cookies
+	for i = 1, self.config.strength do
+		self.head:deleteCookie( self.config.prefix .. 'key' .. i )
+	end
 
 	--always succeeds
 	return true
@@ -203,10 +225,15 @@ function user:checkLogin()
 	if self.user then return true end --already been logged in
 	if not self:cookieLogin() then return false end
 
+	local wheres = { id = self.head:getCookie( self.config.prefix .. 'id' ) }
+	for i = 1, self.config.strength do
+		wheres['key' .. i] = self.head:getCookie( self.config.prefix .. 'key' .. i )
+	end
+
 	--get data
 	local user, err = self.db:select(
 		self.config.dbprefix .. 'user', '*',
-		{ id = self.head:getCookie( self.config.prefix .. 'id' ), key = self.head:getCookie( self.config.prefix .. 'key' ) }
+		wheres
 	)
 
 	--do we have a user?
@@ -267,7 +294,12 @@ end
 --COOKIE BASED checks
 --check cookie login
 function user:cookieLogin()
-	if self.head:getCookie( self.config.prefix .. 'id' ) and self.head:getCookie( self.config.prefix .. 'key' ) then
+	if self.head:getCookie( self.config.prefix .. 'id' ) then
+		for i = 1, self.config.strength do
+			if not self.head:getCookie( self.config.prefix .. 'key' .. i ) then
+				return false
+			end
+		end
 		return true
 	else
 		return false

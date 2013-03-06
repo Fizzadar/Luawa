@@ -226,7 +226,11 @@ function luawa:error( type, message )
     self.template.config.dir = 'luawa/'
     self.template:load( 'error' )
 
+    --dump response
     ngx.say( self.response )
+
+    --edit nginx (stop other output)
+    ngx.exit( ngx.HTTP_INTERNAL_SERVER_ERROR )
 
     return false
 end

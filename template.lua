@@ -116,8 +116,11 @@ function template:load( file, inline )
 
             ngx.shared.cache_template:set( file, cache_id )
         else
-            func = loadstring( string )()
-            if not func then return luawa:error( 500, err ) end
+            --compile our string
+            local status, err = loadstring( string )
+            if not status then return luawa:error( 500, err ) end
+            --compile isn't a function, make it one by calling the compiled string
+            func = status()
         end
     end
 
@@ -156,7 +159,7 @@ function template:process( code )
     --prepend bits
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
-    code = code:gsub( '<%?=([,/_\'%[%]%:%.%a%s%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
+    code = code:gsub( '<%?=([{},/_\'%[%]%:%.%a%s%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
     --replace <? to close output, start raw lua
     code = code:gsub( '<%?', ']] ' )
     --replace ?> to stop lua and start output (in table)
