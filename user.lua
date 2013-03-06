@@ -48,7 +48,7 @@ end
 function user:resetPassword( email )
 	--get user in question
 	local user = self.db:select(
-		self.dbprefix .. 'user', '*',
+		self.config.dbprefix .. 'user', '*',
 		{ email = email }
 	)
 	if not ( user and user[1] ) then
@@ -56,7 +56,7 @@ function user:resetPassword( email )
 	end
 
 	--generate temporary reset key password_reset_key
-	local password_reset_key = self:generateKey( user[1].key )
+	local password_reset_key = self:generateKey( self.utils:randomString( 32 ) )
 
 	--add key + time to database
 	local status, err = self.db:update(
