@@ -7,6 +7,7 @@ local pairs = pairs
 local user = {
 	config = {
 		prefix = '',
+		dbprefix = '',
 		expire = 31536000, --1y
 		reload_key = false,
 		secret = '',
@@ -45,7 +46,7 @@ end
 function user:resetPassword( email )
 	--get user in question
 	local user = self.db:select(
-		'user', '*',
+		self.dbprefix .. 'user', '*',
 		{ email = email }
 	)
 	if not ( user and user[1] ) then
@@ -57,7 +58,7 @@ function user:resetPassword( email )
 
 	--add key + time to database
 	local status, err = self.db:update(
-		'user',
+		self.config.dbprefix .. 'user',
 		{
 			password_reset_key = password_reset_key,
 			password_reset_time = os.time() + 900 --15 mins
@@ -66,7 +67,7 @@ function user:resetPassword( email )
 	)
 	if not status then return false, err end
 
-	--send email with key link
+	--app must send email with key link
 	return password_reset_key
 end
 
@@ -74,7 +75,7 @@ end
 function user:resetPasswordLogin( email, key )
 	--check key+email
 	local user = self.db:select(
-		'user', '*',
+		self.config.dbprefix .. 'user', '*',
 		{ email = email, password_reset_key = key }
 	)
 	if not ( user and user[1] ) or user[1].password_reset_time < os.time() then
@@ -83,7 +84,7 @@ function user:resetPasswordLogin( email, key )
 
 	--remove key+time from database
 	local status, err = self.db:update(
-		'user',
+		self.config.dbprefix .. 'user',
 		{
 			password_reset_key = '',
 			password_reset_time = 0 --15 mins
@@ -109,7 +110,7 @@ function user:register( email, password, name )
 
 	--insert user
 	local result, err = self.db:insert(
-		'user',
+		self.config.dbprefix .. 'user',
 		{ 'email', 'password', 'salt', 'name', 'key', 'register_time' },
 		{ { email, password, salt, name, key, os.time() } }
 	)
@@ -122,7 +123,7 @@ end
 function user:login( email, password, hashed )
 	--get user
 	local user, err = self.db:select(
-		'user', '*',
+		self.config.dbprefix .. 'user', '*',
 		{ email = email }
 	)
 
@@ -157,7 +158,7 @@ function user:login( email, password, hashed )
 
 		--get permissions for cookie
 		local permissions = self.db:select(
-			'user_permissions', 'permission',
+			self.config.dbprefix .. 'user_permissions', 'permission',
 			{ group = self.user.group }
 		)
 		if permissions then
@@ -204,7 +205,7 @@ function user:checkLogin()
 
 	--get data
 	local user, err = self.db:select(
-		'user', '*',
+		self.config.dbprefix .. 'user', '*',
 		{ id = self.head:getCookie( self.config.prefix .. 'id' ), key = self.head:getCookie( self.config.prefix .. 'key' ) }
 	)
 
@@ -223,10 +224,10 @@ function user:checkPermission( permission )
 
 	--sql query to check
 	local permission = self.db:query( [[
-		SELECT user_permissions.permission FROM user_permissions, user_groups
-		WHERE user_permissions.permission = "]] .. permission .. [["
-		AND user_permissions.group_id = user_groups.id
-		AND user_groups.id = ]] .. self.user.group
+		SELECT user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
+		WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
+		AND ]] .. self.config.dbprefix .. [[user_permissions.group_id = ]] .. self.config.dbprefix .. [[user_groups.id
+		AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
 	)
 
 	--permission?
@@ -253,7 +254,7 @@ function user:setData( fields )
 	end
 	--get database result
 	local result, err = self.db:update(
-		'user', fields,
+		self.config.dbprefix .. 'user', fields,
 		{ id = self.user.id }
 	)
 	--if ok set data
