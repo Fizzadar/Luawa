@@ -121,7 +121,16 @@ function database:select( table, fields, wheres, order, limit, offset )
     --wheres
     sql = sql .. 'WHERE true' .. ' '
     for k, v in pairs( wheres ) do
-        sql = sql .. 'AND `' .. k .. '` = ' .. v .. ' '
+        if type( v ) == 'table' then
+            sql = sql .. 'AND ('
+            for c, d in pairs( v ) do
+                sql = sql .. '`' .. c .. '` = ' .. d .. ' OR '
+            end
+            sql = self.utils:rtrim( sql, 'OR ' )
+            sql = sql .. ') '
+        else
+            sql = sql .. 'AND `' .. k .. '` = ' .. v .. ' '
+        end
     end
     --order
     if order then sql = sql .. 'ORDER BY ' .. order .. ' ' end
