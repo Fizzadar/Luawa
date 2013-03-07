@@ -79,7 +79,7 @@ function template:load( file, inline )
     if self.api then return true end
 
     --attempt to get cache_id
-    local cache_id = ngx.shared.cache_template:get( file )
+    local cache_id = ngx.shared[luawa.shm_prefix .. 'cache_template']:get( file )
     local func
 
     --not cached?
@@ -114,7 +114,7 @@ function template:load( file, inline )
             --close file
             f:close()
 
-            ngx.shared.cache_template:set( file, cache_id )
+            ngx.shared[luawa.shm_prefix .. 'cache_template']:set( file, cache_id )
         else
             --compile our string
             local status, err = loadstring( string )

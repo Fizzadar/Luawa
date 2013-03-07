@@ -51,6 +51,9 @@ function luawa:setConfig( dir, file )
     --hostname?
     self.hostname = config.hostname or ''
 
+    --shared memory prefix
+    self.shm_prefix = config.shm_prefix or ''
+
     --cache?
     self.cache = config.cache
 
@@ -163,7 +166,7 @@ end
 --process a file
 function luawa:processFile( file )
     --try to fetch cache id
-    local cache_id = ngx.shared.cache_app:get( file )
+    local cache_id = ngx.shared[self.shm_prefix .. 'cache_app']:get( file )
     local func
 
     --not cached?
@@ -197,7 +200,7 @@ function luawa:processFile( file )
             f:close()
 
             --save to cache
-            ngx.shared.cache_app:set( file, cache_id )
+            ngx.shared[self.shm_prefix .. 'cache_app']:set( file, cache_id )
         else
             func, err = loadstring( string )()
             if not func then return self:error( 500, err ) end

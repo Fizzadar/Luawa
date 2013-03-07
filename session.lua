@@ -19,8 +19,8 @@ function session:_start()
     self.id = self.header:getCookie( 'luawasessionid' ) or self:generateId()
 
     --is there a session in the memory? set to empty json string
-    if not ngx.shared.session:get( self.id ) then
-        ngx.shared.session:set( self.id, '{}' )
+    if not ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ) then
+        ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, '{}' )
     end
 end
 
@@ -41,13 +41,13 @@ function session:set( key, value )
     local data = self:get()
     data[key] = value
     --encode + set to session
-    ngx.shared.session:set( self.id, json.encode( data ) )
+    ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, json.encode( data ) )
 end
 
 --get session data
 function session:get( key )
     --get + decode
-    local data = json.decode( ngx.shared.session:get( self.id ) )
+    local data, err = json.decode( ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ) )
     --return data.key or data
     if not key then return data else return data[key] end
 end
