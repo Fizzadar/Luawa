@@ -233,7 +233,9 @@ function user:checkLogin()
 	--get data
 	local user, err = self.db:select(
 		self.config.dbprefix .. 'user', '*',
-		wheres
+		wheres,
+		'id ASC',
+		1
 	)
 
 	--do we have a user?
