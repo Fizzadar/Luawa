@@ -14,6 +14,16 @@ local debug = {
     }
 }
 
+function debug:_start()
+    --reset the logs
+    self.logs = {
+        messages = {},
+        errors = {},
+        accesses = {},
+        queries = {}
+    }
+end
+
 --end special end not _end
 function debug:__end()
     --include debug?

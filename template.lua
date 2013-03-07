@@ -86,10 +86,10 @@ function template:load( file, inline )
     if not cache_id then
         --read app file
         local f, err = io.open( luawa.root_dir .. self.config.dir .. file .. '.lhtml', 'r' )
-        if not f then return luawa:error( 500, 'Cant open/access file: ' .. err ) end
+        if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
         --read the file
         local string, err = f:read( '*a' )
-        if not string then return luawa:error( 500, 'File read error: ' .. err ) end
+        if not string then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
         --close file
         f:close()
 
@@ -107,10 +107,10 @@ function template:load( file, inline )
         if luawa.cache then
             --now let's save this as a file
             local f, err = io.open( luawa.root_dir .. 'luawa/cache/' .. cache_id .. '.lua', 'w+' )
-            if not f then return luawa:error( 500, 'File error: ' .. err ) end
+            if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: File error: ' .. err ) end
             --write to file
             local status = f:write( string )
-            if not status then return luawa:error( 500, 'File write error: ' .. err ) end
+            if not status then return luawa:error( 500, 'Template: ' .. file .. ' :: File write error: ' .. err ) end
             --close file
             f:close()
 
@@ -118,7 +118,7 @@ function template:load( file, inline )
         else
             --compile our string
             local status, err = loadstring( string )
-            if not status then return luawa:error( 500, err ) end
+            if not status then return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err ) end
             --compile isn't a function, make it one by calling the compiled string
             func = status()
         end
@@ -131,13 +131,13 @@ function template:load( file, inline )
     --if ok, add to output
     if status then
         if inline then
-            return true
+            return err
         else
             luawa.response = luawa.response .. err
             return true
         end
     else
-        return luawa:error( 500, err )
+        return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err )
     end
 end
 

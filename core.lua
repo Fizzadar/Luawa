@@ -222,7 +222,7 @@ function luawa:error( type, message )
     self.debug:error( 'Status: ' .. type .. ' / message: ' .. tostring( message ) )
 
     --hacky
-    self.response = ''
+    self.response = message
     self.template.config.dir = 'luawa/'
     self.template:load( 'error' )
 
@@ -230,7 +230,7 @@ function luawa:error( type, message )
     ngx.say( self.response )
 
     --edit nginx (stop other output)
-    ngx.exit( ngx.HTTP_INTERNAL_SERVER_ERROR )
+    ngx.exit( ngx.HTTP_OK )
 
     return false
 end
