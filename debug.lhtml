@@ -80,11 +80,13 @@
 			//if displayed
 			if( debug.style.display == 'block' ) {
 				debug.style.display = 'none';
+				document.body.style.paddingBottom = '0px';
 				sessionStorage.setItem( 'luawa_debug', 'false' );
 				debug_button.innerHTML = 'debug &uarr;';
 			//if not displayed
 			} else {
 				debug.style.display = 'block';
+				document.body.style.paddingBottom = '220px';
 				sessionStorage.setItem( 'luawa_debug', 'true' );
 				debug_button.innerHTML = 'debug &darr;';
 			}
