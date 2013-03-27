@@ -8,8 +8,7 @@ local ngx, tostring, pcall, loadstring, io, table, type = ngx, tostring, pcall, 
 
 local template = {
     config = {
-        dir = 'app/template/',
-        api = false
+        dir = 'app/template/'
     },
     data = {}
 }
@@ -153,8 +152,8 @@ end
 
 --turn file => lua
 function template:process( code )
-    --trim html?
-    if self.config.trim then code = code:gsub( '[\t\n]', '' ) end
+    --minimize html? will probably break javascript!
+    if self.config.minimize then code = code:gsub( '[\t\n]', ' ' ) end
 
     --prepend bits
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
