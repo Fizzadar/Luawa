@@ -70,19 +70,5 @@ function session:checkToken( token )
     return self:get( 'token' ) == token
 end
 
-
---add a message
-function session:addMessage( type, message )
-    local messages = self:get( 'luawa_messages' )
-    table.insert( messages, { type = type, message = message } )
-    self:set( 'luawa_messages', messages )
-end
-
---get messages
-function session:getMessages()
-    return self:get( 'luawa_messages' )
-end
-
-
 --return
 return session
