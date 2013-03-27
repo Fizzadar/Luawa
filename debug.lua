@@ -29,6 +29,7 @@ function debug:__end()
     --include debug?
     if self.config.enabled then
         luawa.template.config.dir = 'luawa/'
+        luawa.template.config.minimize = false
         luawa.template:set( 'logs', self.logs )
         luawa.template:load( 'debug' )
     end

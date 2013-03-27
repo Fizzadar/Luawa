@@ -93,7 +93,7 @@ function luawa:prepareRequest()
         cookie = {}
     };
     --set hostname
-    request.hostname = request.headers.host or self.hostname
+    request.hostname = request.headers.host:gsub( ':[0-9]+', '' ) or self.hostname
 
     --always get first ?request
     if type( request.get.request ) == 'table' then
@@ -227,6 +227,7 @@ function luawa:error( type, message )
     --hacky
     self.response = message
     self.template.config.dir = 'luawa/'
+    self.template.config.minimize = false
     self.template:load( 'error' )
 
     --dump response
