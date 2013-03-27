@@ -5,9 +5,6 @@
 local os, table, ngx = os, table, ngx
 
 local header = {
-    config = {
-        cookie_domain = ''
-    },
     cookies = {}
 }
 
@@ -42,7 +39,7 @@ end
 function header:setCookie( key, value, expire, path, domain, secure, httponly )
     if not path then path = '/' end
     if not expire then expire = 3600 end
-    if not domain then domain = self.config.cookie_domain end
+    if not domain then domain = luawa.request.hostname end
 
     --basic cookie string
     local string = key .. '=' .. value .. '; Path=' .. path .. '; Expires=' .. os.date( '%a, %d-%b-%Y %H:%M:%S GMT', os.time() + expire )

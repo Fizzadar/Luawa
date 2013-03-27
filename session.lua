@@ -16,7 +16,7 @@ function session:_start()
     self.header, self.utils = luawa.header, luawa.utils
 
     --get session id, or set
-    self.id = self.header:getCookie( 'luawasessionid' ) or self:generateId()
+    self.id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
 
     --is there a session in the memory? set to empty json string
     if not ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ) then
@@ -30,7 +30,7 @@ function session:generateId()
     local id = self.utils:digest( self.utils:randomString( 32 ) )
 
     --send to user via cookie (expires in 24h)
-    self.header:setCookie( 'luawasessionid', id, self.config.expire )
+    self.header:setCookie( 'luawa_sessionid', id, self.config.expire )
 
     return id
 end
@@ -52,6 +52,7 @@ function session:get( key )
     if not key then return data else return data[key] end
 end
 
+
 --get/generate token
 function session:getToken()
     local token = self:get( 'token' )
@@ -68,6 +69,20 @@ end
 function session:checkToken( token )
     return self:get( 'token' ) == token
 end
+
+
+--add a message
+function session:addMessage( type, message )
+    local messages = self:get( 'luawa_messages' )
+    table.insert( messages, { type = type, message = message } )
+    self:set( 'luawa_messages', messages )
+end
+
+--get messages
+function session:getMessages()
+    return self:get( 'luawa_messages' )
+end
+
 
 --return
 return session
