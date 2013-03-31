@@ -288,7 +288,12 @@ function user:setData( fields )
 	)
 	--if ok set data
 	if result then
-		for k, v in pairs( fields ) do self.user[k] = v end
+		for k, v in pairs( fields ) do
+			self.user[k] = v
+			if k == 'name' then
+				self.head:setCookie( self.config.prefix .. 'name', v, self.config.expire )
+			end
+		end
 	end
 	return result, err
 end
