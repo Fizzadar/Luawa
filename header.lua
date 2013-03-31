@@ -51,6 +51,8 @@ function header:setCookie( key, value, expire, path, domain, secure, httponly )
 
     --insert into cookies, to be dumped at end
     table.insert( self.cookies, string )
+    --and set internal cookie for any further requests
+    luawa.request.cookie[key] = value
 end
 
 --get a request cookie
