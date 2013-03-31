@@ -253,9 +253,9 @@ function user:checkPermission( permission )
 
 	--sql query to check
 	local permission = self.db:query( [[
-		SELECT user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
+		SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
 		WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
-		AND ]] .. self.config.dbprefix .. [[user_permissions.group_id = ]] .. self.config.dbprefix .. [[user_groups.id
+		AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
 		AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
 	)
 
@@ -296,7 +296,7 @@ end
 --COOKIE BASED checks
 --check cookie login
 function user:cookieLogin()
-	if self.head:getCookie( self.config.prefix .. 'id' ) then
+	if self.head:getCookie( self.config.prefix .. 'id' ) and self.head:getCookie( self.config.prefix .. 'name' ) then
 		for i = 1, self.config.strength do
 			if not self.head:getCookie( self.config.prefix .. 'key' .. i ) then
 				return false
@@ -313,7 +313,7 @@ function user:cookiePermission( permission )
 	if not self:cookieLogin() or not self.head:getCookie( self.config.prefix .. 'permissions' ) then return false end
 
 	--permission in cookie string?
-	if self.head:getCookie( self.config.prefix .. 'permissions' ):find( permission ) then
+	if self.head:getCookie( self.config.prefix .. 'permissions' ):lower():find( permission:lower() ) then
 		return true
 	else
 		return false
@@ -322,8 +322,14 @@ end
 
 --get cookie name
 function user:cookieName()
-	if not self:cookieLogin() or not self.head:getCookie( self.config.prefix .. 'name' ) then return false end
+	if not self:cookieLogin() then return false end
 	return self.head:getCookie( self.config.prefix .. 'name' )
+end
+
+--get cookie user id
+function user:cookieId()
+	if not self:cookieLogin() then return false end
+	return self.head:getCookie( self.config.prefix .. 'id' )
 end
 
 
