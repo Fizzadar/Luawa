@@ -158,7 +158,7 @@ function template:process( code )
     --prepend bits
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
-    code = code:gsub( '<%?=([{},/_\'%[%]%:%.%a%s%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
+    code = code:gsub( '<%?=([{},/_\'%[%]%:%.%a%s%d%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
     --replace <? to close output, start raw lua
     code = code:gsub( '<%?', ']] ' )
     --replace ?> to stop lua and start output (in table)
