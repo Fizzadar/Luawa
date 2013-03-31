@@ -143,7 +143,7 @@ end
 --function to work before tostring
 function template:toString( string )
     --nil returns blank
-    if string == nil then return 'nil' end
+    if string == nil then return '' end
     --string as string
     if type( string ) == 'string' then return string end
     --otherwise as best
