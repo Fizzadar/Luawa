@@ -202,8 +202,9 @@ function luawa:processFile( file )
             --save to cache
             ngx.shared[self.shm_prefix .. 'cache_app']:set( file, cache_id )
         else
-            func, err = loadstring( string )()
+            func, err = loadstring( string )
             if not func then return self:error( 500, err ) end
+            func = func()
         end
     end
 
