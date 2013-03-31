@@ -230,7 +230,7 @@ return database
 --[[
     possible feature later:
     implement memcache on top of db
-    sync upon luawa.database:_start(), gets all db records into memcache servers
+    sync upon luawa start, gets all db records into memcache servers
     from then on all updates/deletes/inserts will edit both db and database
     select & search will only ever use memcache
 ]]
