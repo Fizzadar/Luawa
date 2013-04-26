@@ -34,13 +34,13 @@ function database:_end()
 end
 
 --clean table data (wheres or values) <= only things with user input
-function database:clean( data )
+function database:escape( data )
     if not self:connect() or type( data ) ~= 'table' then return {} end
 
     local clean_data = {}
     for k, v in pairs( data ) do
         if type( v ) == 'table' then
-            clean_data[k] = self:clean( v )
+            clean_data[k] = self:escape( v )
         else
             clean_data[k] = ngx.quote_sql_str( v )
         end
@@ -114,22 +114,26 @@ function database:select( table, fields, wheres, order, limit, offset )
     local sql
 
     --escape wheres
-    wheres = self:clean( wheres )
+    wheres = self:escape( wheres )
 
     --table & fields
-    sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table .. ' '
+    sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
     --wheres
-    sql = sql .. 'WHERE true' .. ' '
+    sql = sql .. 'WHERE true' .. '\n'
     for k, v in pairs( wheres ) do
         if type( v ) == 'table' then
             sql = sql .. 'AND ('
-            for c, d in pairs( v ) do
-                sql = sql .. '`' .. c .. '` = ' .. d .. ' OR '
+            for c, d in ipairs( v ) do
+                sql = sql .. '`' .. k .. '` = ' .. d .. ' OR\n'
+                v[c] = nil
             end
-            sql = self.utils:rtrim( sql, 'OR ' )
+            for c, d in pairs( v ) do
+                sql = sql .. '`' .. c .. '` = ' .. d .. ' OR\n'
+            end
+            sql = self.utils.rtrim( sql, 'OR\n' )
             sql = sql .. ') '
         else
-            sql = sql .. 'AND `' .. k .. '` = ' .. v .. ' '
+            sql = sql .. 'AND `' .. k .. '` = ' .. v .. '\n'
         end
     end
     --order
@@ -147,7 +151,7 @@ function database:delete( table, wheres )
     local sql
 
     --escape input wheres
-    wheres = self:clean( wheres )
+    wheres = self:escape( wheres )
 
     --table
     sql = 'DELETE FROM ' .. self.config.prefix .. table .. ' '
@@ -165,8 +169,8 @@ function database:update( table, values, wheres )
     local sql
 
     --escape input wheres & values
-    wheres = self:clean( wheres )
-    values = self:clean( values )
+    wheres = self:escape( wheres )
+    values = self:escape( values )
 
     --table
     sql = 'UPDATE ' .. self.config.prefix .. table .. ' '
@@ -175,7 +179,7 @@ function database:update( table, values, wheres )
     for k, v in pairs( values ) do
         sql = sql .. '`' .. k .. '` = ' .. v .. ', '
     end
-    sql = self.utils:rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
     --wheres
     sql = sql .. ' WHERE true' .. ' '
     for k, v in pairs( wheres ) do
@@ -190,7 +194,7 @@ function database:insert( table, fields, values )
     local sql, value
 
     --escape input values
-    values = self:clean( values )
+    values = self:escape( values )
 
     --table
     sql = 'INSERT INTO ' .. self.config.prefix .. table .. ' '
@@ -199,7 +203,7 @@ function database:insert( table, fields, values )
     for k, v in pairs( fields ) do
         sql = sql .. '`' .. v .. '`, '
     end
-    sql = self.utils:rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
     sql = sql .. ' ) VALUES '
     --values
     for k, v in pairs( values ) do
@@ -207,10 +211,10 @@ function database:insert( table, fields, values )
         for c, d in pairs( v ) do
             value = value .. d .. ', '
         end
-        value = self.utils:rtrim( value, ', ' ) --clear last ,
+        value = self.utils.rtrim( value, ', ' ) --clear last ,
         sql = sql .. value .. ' ), '
     end
-    sql = self.utils:rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
 
     return self:query( sql )
 end
