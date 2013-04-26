@@ -251,9 +251,11 @@ end
 function user:checkPermission( permission )
 	if not self:checkLogin() then return false end
 	if not self:cookiePermission( permission ) then return false end
+	if not self.user.permissions then self.user.permissions = {} end
+	if self.user.permissions[permission] ~= nil then return self.user.permissions[permission] end
 
 	--sql query to check
-	local permission = self.db:query( [[
+	local check = self.db:query( [[
 SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
 WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
 AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
@@ -261,7 +263,13 @@ AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
 	)
 
 	--permission?
-	if permission[1] then return true else return false end
+	if check[1] then
+		self.user.permissions[permission] = true
+		return true
+	else
+		self.user.permissions[permission] = false
+		return false
+	end
 end
 
 --get data
