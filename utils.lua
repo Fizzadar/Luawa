@@ -47,13 +47,13 @@ end
 --rtrim string (remove chars from right end)
 function utils.rtrim( string, chars )
     if not string or not chars then return false end
-    return string:gsub( '^(.-)[' .. chars .. ']*$', '%1' )
+    return string:match( '^(.-)[' .. chars .. ']*$' )
 end
 
 --ltrim string (remove chars from left end)
 function utils.ltrim( string, chars )
     if not string or not chars then return false end
-    return string:gsub( '^[' .. chars .. ']*(.-)$', '%1' )
+    return string:match( '^[' .. chars .. ']*(.-)$' )
 end
 
 --random string
