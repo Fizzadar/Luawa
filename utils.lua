@@ -41,7 +41,7 @@ end
 --trim string
 function utils.trim( string )
     if not string then return false end
-    return string:gsub( '^%s*(.-)%s*$', '%1' )
+    return string:match( '^%s*(.-)%s*$' )
 end
 
 --rtrim string (remove chars from right end)
