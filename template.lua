@@ -16,27 +16,41 @@ local template = {
 --start function
 function template:_start()
     --api?
-    if self.config.api and luawa.request.hostname == self.config.api_host then
+    if self.config.api and luawa.request.get._api then
         self.api = true
     end
 end
 
 --special start
 function template:__start()
-    --token check
-    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken(), true ) end --good to have them on api?
+    --token check (if regenerated session adds it for us)
+    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken() ) end
 end
 
 --end function
 function template:_end()
     --if api request output template data as json
     if self.api then
+        local function clean( data )
+            if type( data ) == 'table' then
+                for k, v in pairs( data ) do
+                    data[k] = clean( v )
+                end
+            else
+                if type( data ) == 'function' then
+                    data = false
+                end
+            end
+            return data
+        end
+        clean( self.data )
+
+        luawa.header:setHeader( 'Content-Type', 'text/json' )
         local out, err = json.encode( self.data )
         if out then
-            luawa.header:setHeader( 'Content-Type', 'text/json' )
             luawa.response = out
         else
-            luawa.debug:error( err )
+            luawa.response = json.encode( { error = err } )
         end
         self.api = false
     end
@@ -46,12 +60,24 @@ end
 
 --set data
 function template:set( key, value, api )
-    --not api, set as normal
-    if not self.api then
+    --not api or api enabled
+    if not self.api or api then
         self.data[key] = value
-    --if api, must be allowed in function
-    elseif api then
-        self.data[key] = value
+    end
+end
+
+--add data (makes table value must be table)
+function template:add( key, value, api )
+    if not self.api or api then
+        if not self.data[key] then
+            self.data[key] = {}
+        elseif type( self.data[key] ) ~= 'table' then
+            self.data[key] = { self.data[key] }
+        end
+
+        for k, v in pairs( value ) do
+            table.insert( self.data[key], v )
+        end
     end
 end
 
