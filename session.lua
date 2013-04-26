@@ -13,7 +13,7 @@ local session = {
 
 --start
 function session:_start()
-    self.header, self.utils = luawa.header, luawa.utils
+    self.header, self.utils, self.template = luawa.header, luawa.utils, luawa.template
 
     --get session id, or set
     self.id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
@@ -27,7 +27,7 @@ end
 --generate & set an ID
 function session:generateId()
     --generate random id
-    local id = self.utils:digest( self.utils:randomString( 32 ) )
+    local id = self.utils.digest( self.utils.randomString( 32 ) )
 
     --send to user via cookie (expires in 24h)
     self.header:setCookie( 'luawa_sessionid', id, self.config.expire )
@@ -52,14 +52,25 @@ function session:get( key )
     if not key then return data else return data[key] end
 end
 
+--delete session data
+function session:delete( key )
+    --get + remove
+    local data = self:get()
+    data[key] = nil
+    --encode + set to session
+    ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, json.encode( data ) )
+end
+
 
 --get/generate token
 function session:getToken()
     local token = self:get( 'token' )
     --generate token
     if not token then
-        token = self.utils:randomString( 16 )
+        token = self.utils.randomString( 16 )
         self:set( 'token', token )
+        --apply to template
+        self.template:set( 'token', token, true )
     end
 
     return token
@@ -67,7 +78,13 @@ end
 
 --validate token
 function session:checkToken( token )
-    return self:get( 'token' ) == token
+    --check token
+    local result = self:get( 'token' ) == token
+    --delete token, get a new one
+    self:delete( 'token' )
+    self:getToken()
+
+    return result
 end
 
 --return
