@@ -109,33 +109,46 @@ function database:numRows()
     return self.numrows
 end
 
+function database:wheresToSql( wheres )
+    local where = ''
+    if wheres then
+        --where
+        wheres = self:escape( wheres )
+        --loop them
+        for k, v in pairs( wheres ) do
+            if type( v ) == 'table' then
+                where = where .. 'AND ('
+                for c, d in ipairs( v ) do
+                    where = where .. '`' .. k .. '` = ' .. d .. ' OR '
+                    v[c] = nil
+                end
+                for c, d in pairs( v ) do
+                    where = where .. '`' .. c .. '` = ' .. d .. ' OR '
+                end
+                where = self.utils.rtrim( where, 'OR ' )
+                where = where .. ')\n'
+            else
+                where = where .. 'AND `' .. k .. '` = ' .. v .. '\n'
+            end
+        end
+        if where ~= '' then
+            where = 'WHERE\n' .. self.utils.ltrim( where, 'AND' )
+        end
+    end
+
+    return where
+end
+
 --run a select request (build query + run)
 function database:select( table, fields, wheres, order, limit, offset )
     local sql
 
-    --escape wheres
-    wheres = self:escape( wheres )
-
     --table & fields
     sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
+
     --wheres
-    sql = sql .. 'WHERE true' .. '\n'
-    for k, v in pairs( wheres ) do
-        if type( v ) == 'table' then
-            sql = sql .. 'AND ('
-            for c, d in ipairs( v ) do
-                sql = sql .. '`' .. k .. '` = ' .. d .. ' OR\n'
-                v[c] = nil
-            end
-            for c, d in pairs( v ) do
-                sql = sql .. '`' .. c .. '` = ' .. d .. ' OR\n'
-            end
-            sql = self.utils.rtrim( sql, 'OR\n' )
-            sql = sql .. ') '
-        else
-            sql = sql .. 'AND `' .. k .. '` = ' .. v .. '\n'
-        end
-    end
+    sql = sql .. self:wheresToSql( wheres )
+
     --order
     if order then sql = sql .. 'ORDER BY ' .. order .. ' ' end
     --limit
@@ -155,11 +168,9 @@ function database:delete( table, wheres )
 
     --table
     sql = 'DELETE FROM ' .. self.config.prefix .. table .. ' '
+
     --wheres
-    sql = sql .. 'WHERE true' .. ' '
-    for k, v in pairs( wheres ) do
-        sql = sql .. 'AND `' .. k .. '` = ' .. v .. ' '
-    end
+    sql = sql .. self:wheresToSql( wheres )
 
     return self:query( sql )
 end
@@ -180,11 +191,9 @@ function database:update( table, values, wheres )
         sql = sql .. '`' .. k .. '` = ' .. v .. ', '
     end
     sql = self.utils.rtrim( sql, ', ' ) --clear last ,
+
     --wheres
-    sql = sql .. ' WHERE true' .. ' '
-    for k, v in pairs( wheres ) do
-        sql = sql .. 'AND `' .. k .. '` = ' .. v .. ' '
-    end
+    sql = sql .. self:wheresToSql( wheres )
 
     return self:query( sql )
 end
