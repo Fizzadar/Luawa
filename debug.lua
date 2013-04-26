@@ -28,10 +28,17 @@ end
 function debug:__end()
     --include debug?
     if self.config.enabled then
-        luawa.template.config.dir = 'luawa/'
-        luawa.template.config.minimize = false
-        luawa.template:set( 'logs', self.logs )
-        luawa.template:load( 'debug' )
+        local template = luawa.template
+
+        --add logs + template data
+        local data = template:get()
+        template:set( 'debug_data', luawa.utils.tableString( template.data ) )
+        template:set( 'debug_logs', self.logs )
+
+        --load debug template
+        template.config.dir = 'luawa/'
+        template.config.minimize = false
+        template:load( 'debug' )
     end
 end
 

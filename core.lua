@@ -124,7 +124,7 @@ function luawa:prepareRequest()
     if request.headers.cookie then
         for k, v in request.headers.cookie:gmatch( '([^;]+)' ) do
             local a, b, key, value = k:find( '([^=]+)=([^=]+)')
-            request.cookie[luawa.utils:trim( key )] = value
+            request.cookie[luawa.utils.trim( key )] = value
         end
     end
 
@@ -214,7 +214,7 @@ function luawa:processFile( file )
 
     --error?
     if not status then
-        self:error( 500, 'Request error: ' .. err )
+        self:error( 500, 'File: ' .. file .. '.lua, error: ' .. err )
     end
 
     --done!
@@ -226,7 +226,7 @@ function luawa:error( type, message )
     self.debug:error( 'Status: ' .. type .. ' / message: ' .. tostring( message ) )
 
     --hacky
-    self.response = message
+    self.response = ''
     self.template.config.dir = 'luawa/'
     self.template.config.minimize = false
     self.template:load( 'error' )
