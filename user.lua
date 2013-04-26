@@ -34,14 +34,14 @@ function user:generatePassword( password, salt )
 	--loop strength times (increase rainbow table calculation time)
 	--each loop inputs the users password
 	for i = 1, self.config.strength do
-		str = self.utils:digest( str .. password )
+		str = self.utils.digest( str .. password )
 	end
 	return str
 end
 
 --generate a key
 function user:generateKey( entropy )
-	return self.utils:digest( entropy .. self.utils:randomString( 32 ) )
+	return self.utils.digest( entropy .. self.utils.randomString( 32 ) )
 end
 
 --reset a password
@@ -56,7 +56,7 @@ function user:resetPassword( email )
 	end
 
 	--generate temporary reset key password_reset_key
-	local password_reset_key = self:generateKey( self.utils:randomString( 32 ) )
+	local password_reset_key = self:generateKey( self.utils.randomString( 32 ) )
 
 	--add key + time to database
 	local status, err = self.db:update(
@@ -105,7 +105,7 @@ function user:register( email, password, name )
 	if password == '' then return false, 'Invalid password' end
 
 	--salt & key
-	local salt, key = self.utils:randomString( 32 ), self:generateKey( password )
+	local salt, key = self.utils.randomString( 32 ), self:generateKey( password )
 
 	--hash password
 	password = self:generatePassword( password, salt )
@@ -156,7 +156,7 @@ function user:login( email, password, hashed )
 		--reload key?
 		if self.config.reload_key then
 			for i = 1, self.config.strength do
-				local key = self:generateKey( self.utils:randomString( 32 ) )
+				local key = self:generateKey( self.utils.randomString( 32 ) )
 				self.user['key' .. i] = key
 				update['key' .. i] = key
 			end
@@ -184,7 +184,7 @@ function user:login( email, password, hashed )
 			for k, v in pairs( permissions ) do
 				permission_string = permission_string .. v.permission .. ','
 			end
-			permission_string = self.utils:rtrim( permission_string, ',' )
+			permission_string = self.utils.rtrim( permission_string, ',' )
 			self.head:setCookie( self.config.prefix .. 'permissions', permission_string, self.config.expire )
 		end
 
@@ -198,7 +198,7 @@ end
 function user:logout()
 	--reload key before logging out?
 	if self.config.reload_key then
-		self:setData( { key = self.utils:digest( self.utils:randomString( 32 ) ) } )
+		self:setData( { key = self.utils.digest( self.utils.randomString( 32 ) ) } )
 	end
 
 	--delete user if there
@@ -250,13 +250,14 @@ end
 --check permission
 function user:checkPermission( permission )
 	if not self:checkLogin() then return false end
+	if not self:cookiePermission( permission ) then return false end
 
 	--sql query to check
 	local permission = self.db:query( [[
-		SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
-		WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
-		AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
-		AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
+SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
+WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
+AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
+AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
 	)
 
 	--permission?
