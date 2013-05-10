@@ -163,9 +163,6 @@ end
 function database:delete( table, wheres )
     local sql
 
-    --escape input wheres
-    wheres = self:escape( wheres )
-
     --table
     sql = 'DELETE FROM ' .. self.config.prefix .. table .. ' '
 
@@ -179,8 +176,7 @@ end
 function database:update( table, values, wheres )
     local sql
 
-    --escape input wheres & values
-    wheres = self:escape( wheres )
+    --escape input values
     values = self:escape( values )
 
     --table
