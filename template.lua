@@ -24,7 +24,7 @@ end
 --special start
 function template:__start()
     --token check (if regenerated session adds it for us)
-    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken() ) end
+    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken(), true ) end
 end
 
 --end function
