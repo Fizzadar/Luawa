@@ -19,18 +19,6 @@ local luawa = {
     response = '<!--the first request is always special-->'
 }
 
---start luawa app
-function luawa:start()
-    --start the server
-    luawa.debug:message( 'Starting Server...' )
-    if luawa_server:start() then
-        --start server loop
-        luawa_server:loop()
-    else
-        luawa.debug:error( 'Failed to start server' )
-    end
-end
-
 --set the config
 function luawa:setConfig( dir, file )
     self.root_dir = dir or ''
