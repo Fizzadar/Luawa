@@ -32,7 +32,7 @@ end
 
 --get a request header
 function header:getHeader( key )
-    return ngx.header[key] or false
+    return luawa.request.headers[key] or false
 end
 
 --set a response cookie
