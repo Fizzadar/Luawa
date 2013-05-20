@@ -84,6 +84,18 @@ function utils.urlEncode( string )
     return string
 end
 
+--explode, credit: http://richard.warburton.it
+function utils.explode( string, divide )
+  if divide == '' then return false end
+  local pos, arr = 0, {}
+  --for each divider found
+  for st, sp in function() return string.find( string, divide, pos, true ) end do
+    table.insert( arr, string.sub( string, pos, st - 1 ) ) --attach chars left of current divider
+    pos = sp + 1 --jump past current divider
+  end
+  table.insert( arr, string.sub( string, pos ) ) -- Attach chars right of last divider
+  return arr
+end
 
 --return obj
 return utils
