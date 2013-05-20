@@ -184,14 +184,16 @@ function database:update( table, values, wheres )
 end
 
 --run a insert request
-function database:insert( table, fields, values )
+function database:insert( table, fields, values, replace )
     local sql, value
+    local cmd = 'INSERT'
+    if replace then cmd = 'REPLACE' end
 
     --escape input values
     values = self:escape( values )
 
     --table
-    sql = 'INSERT INTO ' .. self.config.prefix .. table .. ' '
+    sql = cmd .. ' INTO ' .. self.config.prefix .. table .. ' '
     --fields
     sql = sql .. '( '
     for k, v in pairs( fields ) do
@@ -211,6 +213,10 @@ function database:insert( table, fields, values )
     sql = self.utils.rtrim( sql, ', ' ) --clear last ,
 
     return self:query( sql )
+end
+--insert/replace request
+function database:replace( table, fields, values )
+    return self:insert( table, fields, values, true )
 end
 
 --run a search request
