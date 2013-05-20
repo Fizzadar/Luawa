@@ -94,19 +94,8 @@ function database:query( sql )
     --message
     luawa.debug:query( sql )
 
-    --table returned?
-    if type( data ) == 'table' then
-        self.numrows = #data
-    end
-
-    --return results
+    --return results (data.insert_id, data.affected_rows and #data)
     return data
-end
-
---get number of rows from last query
-function database:numRows()
-    if not self.numrows then return false end
-    return self.numrows
 end
 
 function database:wheresToSql( wheres )
