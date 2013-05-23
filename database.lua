@@ -129,7 +129,7 @@ function database:wheresToSql( wheres )
 end
 
 --run a select request (build query + run)
-function database:select( table, fields, wheres, order, limit, offset )
+function database:select( table, fields, wheres, order, limit, offset, group )
     local sql
 
     --table & fields
@@ -138,6 +138,8 @@ function database:select( table, fields, wheres, order, limit, offset )
     --wheres
     sql = sql .. self:wheresToSql( wheres )
 
+    --group
+    if group then sql = sql .. ' GROUP BY ' .. group end
     --order
     if order then sql = sql .. 'ORDER BY ' .. order .. ' ' end
     --limit
