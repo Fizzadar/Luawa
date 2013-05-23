@@ -37,7 +37,6 @@ end
 --html => html entities
 function utils.htmlents( string )
     local entities = {
-        [' '] = '&nbsp;',
         ['¡'] = '&iexcl;',
         ['¢'] = '&cent;',
         ['£'] = '&pound;',
