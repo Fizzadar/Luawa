@@ -157,21 +157,25 @@ function utils.isEmail( string )
     end
 end
 
+--check an url
+function utils.isUrl( string )
+    if string:match( '^https?://' ) then
+        return true
+    end
+end
+
 --trim string
 function utils.trim( string )
-    if not string then return false end
     return string:match( '^%s*(.-)%s*$' )
 end
 
 --rtrim string (remove chars from right end)
 function utils.trimRight( string, chars )
-    if not string or not chars then return false end
     return string:match( '^(.-)[' .. chars .. ']*$' )
 end
 
 --ltrim string (remove chars from left end)
 function utils.trimLeft( string, chars )
-    if not string or not chars then return false end
     return string:match( '^[' .. chars .. ']*(.-)$' )
 end
 

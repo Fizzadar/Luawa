@@ -112,7 +112,9 @@ function luawa:prepareRequest()
     if request.headers.cookie then
         for k, v in request.headers.cookie:gmatch( '([^;]+)' ) do
             local a, b, key, value = k:find( '([^=]+)=([^=]+)')
-            request.cookie[luawa.utils.trim( key )] = value
+            if key and value then
+                request.cookie[luawa.utils.trim( key )] = value
+            end
         end
     end
 
