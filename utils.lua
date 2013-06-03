@@ -138,9 +138,16 @@ function utils.htmlents( string )
         ['>'] = '&gt;',
         ['&'] = '&amp;'
     }
-    return string:gsub( '.', function( v )
+    string = string:gsub( '.', function( v )
         if entities[v] then return entities[v] else return v end
     end )
+    return string
+end
+
+--alphanumeric-ify string
+function utils.alphnum( string )
+    string = string:gsub( '%W', '' )
+    return string
 end
 
 --trim string
