@@ -114,14 +114,14 @@ function database:wheresToSql( wheres )
                 for c, d in pairs( v ) do
                     where = where .. '`' .. c .. '` = ' .. d .. ' OR '
                 end
-                where = self.utils.rtrim( where, 'OR ' )
+                where = self.utils.trimRight( where, 'OR ' )
                 where = where .. ')\n'
             else
                 where = where .. 'AND `' .. k .. '` = ' .. v .. '\n'
             end
         end
         if where ~= '' then
-            where = 'WHERE\n' .. self.utils.ltrim( where, 'AND' )
+            where = 'WHERE\n' .. self.utils.trimLeft( where, 'AND' )
         end
     end
 
@@ -177,7 +177,7 @@ function database:update( table, values, wheres )
     for k, v in pairs( values ) do
         sql = sql .. '`' .. k .. '` = ' .. v .. ', '
     end
-    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
 
     --wheres
     sql = sql .. self:wheresToSql( wheres )
@@ -201,7 +201,7 @@ function database:insert( table, fields, values, replace )
     for k, v in pairs( fields ) do
         sql = sql .. '`' .. v .. '`, '
     end
-    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
     sql = sql .. ' ) VALUES '
     --values
     for k, v in pairs( values ) do
@@ -209,10 +209,10 @@ function database:insert( table, fields, values, replace )
         for c, d in pairs( v ) do
             value = value .. d .. ', '
         end
-        value = self.utils.rtrim( value, ', ' ) --clear last ,
+        value = self.utils.trimRight( value, ', ' ) --clear last ,
         sql = sql .. value .. ' ), '
     end
-    sql = self.utils.rtrim( sql, ', ' ) --clear last ,
+    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
 
     return self:query( sql )
 end

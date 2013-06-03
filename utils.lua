@@ -35,7 +35,7 @@ function utils.tableString( table, level )
 end
 
 --html => html entities
-function utils.htmlents( string )
+function utils.htmlEnts( string )
     local entities = {
         ['¡'] = '&iexcl;',
         ['¢'] = '&cent;',
@@ -145,9 +145,16 @@ function utils.htmlents( string )
 end
 
 --alphanumeric-ify string
-function utils.alphnum( string )
+function utils.alphaNumerify( string )
     string = string:gsub( '%W', '' )
     return string
+end
+
+--check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
+function utils.isEmail( string )
+    if string:match( '@' ) then
+        return true
+    end
 end
 
 --trim string
@@ -157,13 +164,13 @@ function utils.trim( string )
 end
 
 --rtrim string (remove chars from right end)
-function utils.rtrim( string, chars )
+function utils.trimRight( string, chars )
     if not string or not chars then return false end
     return string:match( '^(.-)[' .. chars .. ']*$' )
 end
 
 --ltrim string (remove chars from left end)
-function utils.ltrim( string, chars )
+function utils.trimLeft( string, chars )
     if not string or not chars then return false end
     return string:match( '^[' .. chars .. ']*(.-)$' )
 end

@@ -184,7 +184,7 @@ function user:login( email, password, hashed )
 			for k, v in pairs( permissions ) do
 				permission_string = permission_string .. v.permission .. ','
 			end
-			permission_string = self.utils.rtrim( permission_string, ',' )
+			permission_string = self.utils.trimRight( permission_string, ',' )
 			self.head:setCookie( self.config.prefix .. 'permissions', permission_string, self.config.expire )
 		end
 
