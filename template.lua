@@ -13,14 +13,6 @@ local template = {
     data = {}
 }
 
---start function
-function template:_start()
-    --api?
-    if self.config.api and luawa.request.get._api then
-        self.api = true
-    end
-end
-
 --special start
 function template:__start()
     --token check (if regenerated session adds it for us)
