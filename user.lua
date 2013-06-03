@@ -11,7 +11,8 @@ local user = {
 		expire = 31536000, --1y
 		reload_key = false,
 		secret = '',
-		strength = 1
+		keys = 1,
+		stretching = 1
 	}
 }
 
@@ -31,9 +32,9 @@ function user:generatePassword( password, salt )
 
 	--start with salt & secret
 	local str = salt .. self.config.secret
-	--loop strength times (increase rainbow table calculation time)
+	--loop stretching times (increase rainbow table calculation time)
 	--each loop inputs the users password
-	for i = 1, self.config.strength do
+	for i = 1, self.config.stretching do
 		str = self.utils.digest( str .. password )
 	end
 	return str
@@ -115,7 +116,7 @@ function user:register( email, password, name )
 	local user = { email, password, salt, name, os.time() }
 
 	--generate n keys
-	for i = 1, self.config.strength do
+	for i = 1, self.config.keys do
 		table.insert( fields, 'key' .. i )
 		table.insert( user, self:generateKey( password ) )
 	end
@@ -155,7 +156,7 @@ function user:login( email, password, hashed )
 
 		--reload key?
 		if self.config.reload_key then
-			for i = 1, self.config.strength do
+			for i = 1, self.config.keys do
 				local key = self:generateKey( self.utils.randomString( 32 ) )
 				self.user['key' .. i] = key
 				update['key' .. i] = key
@@ -170,7 +171,7 @@ function user:login( email, password, hashed )
 		self.head:setCookie( self.config.prefix .. 'name', self.user.name, self.config.expire )
 
 		--set key cookies
-		for i = 1, self.config.strength do
+		for i = 1, self.config.keys do
 			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
 		end
 
@@ -210,7 +211,7 @@ function user:logout()
 	self.head:deleteCookie( self.config.prefix .. 'permissions' )
 
 	--delete key cookies
-	for i = 1, self.config.strength do
+	for i = 1, self.config.keys do
 		self.head:deleteCookie( self.config.prefix .. 'key' .. i )
 	end
 
@@ -226,7 +227,7 @@ function user:checkLogin()
 	if not self:cookieLogin() then return false end
 
 	local wheres = { id = self.head:getCookie( self.config.prefix .. 'id' ) }
-	for i = 1, self.config.strength do
+	for i = 1, self.config.keys do
 		wheres['key' .. i] = self.head:getCookie( self.config.prefix .. 'key' .. i )
 	end
 
@@ -311,7 +312,7 @@ end
 --check cookie login
 function user:cookieLogin()
 	if self.head:getCookie( self.config.prefix .. 'id' ) and self.head:getCookie( self.config.prefix .. 'name' ) then
-		for i = 1, self.config.strength do
+		for i = 1, self.config.keys do
 			if not self.head:getCookie( self.config.prefix .. 'key' .. i ) then
 				return false
 			end
