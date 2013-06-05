@@ -10,6 +10,9 @@
 			font-family: Arial;
 			color: green;
 			font-weight: bold;
+			text-decoration: none;
+			border: none;
+			background: transparent;
 		}
 
 		.luawa_debug_red {
