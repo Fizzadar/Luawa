@@ -42,7 +42,7 @@ function header:setCookie( key, value, expire, path, domain, secure, httponly )
     if not domain then domain = luawa.request.hostname end
 
     --basic cookie string
-    local string = key .. '=' .. value .. '; Path=' .. path .. '; Expires=' .. os.date( '%a, %d-%b-%Y %H:%M:%S GMT', os.time() + expire )
+    local string = key .. '=' .. value .. '; Path=' .. path .. '; Expires=' .. ngx.cookie_time( os.time() + expire )
 
     --extras
     if domain then string = string .. '; Domain=' .. domain end

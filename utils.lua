@@ -191,20 +191,14 @@ function utils.digest( string )
     return str.to_hex( sha:final() )
 end
 
---urldecode <= http://lua-users.org/wiki/StringRecipes
+--urldecode
 function utils.urlDecode( string )
-    string = string:gsub( '+', ' ' )
-    string = string:gsub( '%%(%x%x)', function( h ) return string.char( tonumber( h, 16 ) ) end )
-    string = string:gsub( '\r\n', '\n' )
-    return string
+    return ngx.unescape_uri( string )
 end
 
---urlencode (see above link)
+--urlencode
 function utils.urlEncode( string )
-    string = string:gsub( '\n', '\r\n' )
-    string = string:gsub( '([^%w ])', function( h ) return string.format( '%%%02X', string.byte( h ) ) end )
-    string = string:gsub( ' ', '+' )
-    return string
+    return ngx.escape_uri( string )
 end
 
 --explode, credit: http://richard.warburton.it
