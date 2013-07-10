@@ -54,6 +54,7 @@
 			position: fixed;
 			z-index: 98;
 			display: none;
+			box-sizing: border-box;
 		}
 			div#luawa_debug img {
 				float: left;
@@ -70,12 +71,12 @@
 			div#luawa_debug div#luawa_debug_block {
 				float: left;
 				width: 48%;
-				padding: 20px 10px;
+				padding: 20px 0;
 				background: #FFF;
 				border: 1px solid #D7D7D7;
 				border-top: none;
 				border-bottom: none;
-				height: 161px;
+				height: 200px;
 				margin-left: -20px;
 			}
 			div#luawa_debug div#luawa_debug_block.right {
@@ -85,7 +86,6 @@
 				div#luawa_debug div#luawa_debug_block h4 {
 					margin-top: -20px;
 					background: #F7F7F7;
-					margin-left: -10px;
 					text-indent: -10px;
 					margin-bottom: 0;
 					padding: 5px 0px 0px 20px;
@@ -107,7 +107,7 @@
 				margin-top: -262px;
 				height: 260px;
 				overflow: auto;
-				width: 98%;
+				width: 100%;
 				padding-left: 250px;
 				background: #FFF999;
 				border-top: 1px solid #D7D7D7;
@@ -115,6 +115,11 @@
 
 			div#luawa_debug_console {
 				white-space: pre;
+				padding: 10px;
+			}
+
+			div#luawa_debug_messages {
+				padding: 10px;
 			}
 	</style>
 
