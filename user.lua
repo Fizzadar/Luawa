@@ -104,6 +104,7 @@ end
 function user:register( email, password, name )
 	if not name then name = 'Unknown' end
 	if password == '' then return false, 'Invalid password' end
+	if not self.utils.isEmail( email ) then return false, 'Invalid email' end
 
 	--salt & key
 	local salt, key = self.utils.randomString( 32 ), self:generateKey( password )
