@@ -15,8 +15,8 @@ local template = {
 
 --special start
 function template:__start()
-    --token check (if regenerated session adds it for us)
-    if not self:get( 'token' ) then self:set( 'token', luawa.session:getToken(), true ) end
+    --add token for forms/etc (if regenerated session adds it for us)
+    self:set( 'token', luawa.session:getToken(), true )
 end
 
 --end function
@@ -176,7 +176,7 @@ function template:process( code )
     --prepend bits
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
-    code = code:gsub( '<%?=([{},/_\'%[%]%:%.%a%s%d%(%)]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
+    code = code:gsub( '<%?=([{},/_\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
     --replace <? to close output, start raw lua
     code = code:gsub( '<%?', ']] ' )
     --replace ?> to stop lua and start output (in table)

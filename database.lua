@@ -222,9 +222,12 @@ function database:replace( table, fields, values )
 end
 
 --run a search request
-function database:search( table, fields )
+function database:search( table, search_fields, fetch_fields, query )
     local sql
 
+    sql = 'SELECT (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) AS score, ' .. fetch_fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
+    sql = sql .. 'WHERE (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) > 0'
+    
     return self:query( sql )
 end
 
