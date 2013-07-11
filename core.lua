@@ -176,7 +176,7 @@ function luawa:processFile( file )
         string = string .. '\n\nend return _luawa_app'
 
         --generate cache_id
-        cache_id = file:gsub( '/', '_' )
+        cache_id = file:gsub( '[^%w]', '_' )
 
         --cache?
         if self.cache then
