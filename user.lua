@@ -130,7 +130,7 @@ function user:register( email, password, name )
 	)
 
 	--success?
-	if result then return true else return false, err end
+	if not err then return true else return false, err end
 end
 
 --login a user
