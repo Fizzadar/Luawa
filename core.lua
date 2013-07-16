@@ -45,6 +45,9 @@ function luawa:setConfig( dir, file )
     --cache?
     self.cache = config.cache
 
+    --limit post args?
+    self.limit_post = config.limit_post or 100
+
     --module config
     for k, v in pairs( self.modules ) do
         if type( config[v] ) == 'table' then
@@ -96,7 +99,7 @@ function luawa:prepareRequest()
         res = self.posts[request.get.request] or self.posts.default
         --setup post args
         ngx.req.read_body()
-        request.post = ngx.req.get_post_args()
+        request.post = ngx.req.get_post_args( self.limit_post )
     end
 
     --invalid request
