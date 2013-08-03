@@ -14,7 +14,7 @@ function utils.tableString( table, level )
         --not a table?
         if type( table ) ~= 'table' then return false end
 
-        local string = ''
+        local str = ''
         local table, level = table or {}, level or 0
 
         --loop through the table
@@ -22,20 +22,20 @@ function utils.tableString( table, level )
             for i = 0, level do
                 k = ' ' .. k
             end
-            string = string .. "\n" .. k .. ' => ' .. tostring( v )
+            str = str .. "\n" .. k .. ' => ' .. tostring( v )
             if type( v ) == 'table' then
-                string = string .. tableString( v, level + 4 )
+                str = str .. tableString( v, level + 4 )
             end
         end
 
-        return string
+        return str
     end
 
     return tableString( table, level )
 end
 
 --html => html entities
-function utils.htmlEnts( string )
+function utils.htmlEnts( str )
     local entities = {
         ['¡'] = '&iexcl;',
         ['¢'] = '&cent;',
@@ -138,45 +138,49 @@ function utils.htmlEnts( string )
         ['>'] = '&gt;',
         ['&'] = '&amp;'
     }
-    string = string:gsub( '.', function( v )
+    str = str:gsub( '.', function( v )
         if entities[v] then return entities[v] else return v end
     end )
-    return string
+    return str
 end
 
 --alphanumeric-ify string
-function utils.alphaNumerify( string )
-    string = string:gsub( '%W', '' )
-    return string
+function utils.alphaNumerify( str )
+    return str:gsub( '%W', '' )
+end
+
+--capitalize first character
+function utils.capitalizeFirst( str )
+    return str:gsub( '^%l', string.upper )
 end
 
 --check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
-function utils.isEmail( string )
-    if string:match( '@' ) then
+function utils.isEmail( str )
+    if str:match( '@' ) then
         return true
     end
 end
 
 --check an url
-function utils.isUrl( string )
-    if string:match( '^https?://' ) then
+function utils.isUrl( str )
+    if str:match( '^https?://' ) then
         return true
     end
 end
 
 --trim string
-function utils.trim( string )
-    return string:match( '^%s*(.-)%s*$' )
+function utils.trim( str )
+    return str:match( '^%s*(.-)%s*$' )
 end
 
 --rtrim string (remove chars from right end)
-function utils.trimRight( string, chars )
-    return string:match( '^(.-)[' .. chars .. ']*$' )
+function utils.trimRight( str, chars )
+    return str:match( '^(.-)[' .. chars .. ']*$' )
 end
 
 --ltrim string (remove chars from left end)
-function utils.trimLeft( string, chars )
-    return string:match( '^[' .. chars .. ']*(.-)$' )
+function utils.trimLeft( str, chars )
+    return str:match( '^[' .. chars .. ']*(.-)$' )
 end
 
 --random string
@@ -192,25 +196,25 @@ function utils.digest( string )
 end
 
 --urldecode
-function utils.urlDecode( string )
-    return ngx.unescape_uri( string )
+function utils.urlDecode( str )
+    return ngx.unescape_uri( str )
 end
 
 --urlencode
-function utils.urlEncode( string )
-    return ngx.escape_uri( string )
+function utils.urlEncode( str )
+    return ngx.escape_uri( str )
 end
 
 --explode, credit: http://richard.warburton.it
-function utils.explode( string, divide )
+function utils.explode( str, divide )
   if divide == '' then return false end
   local pos, arr = 0, {}
   --for each divider found
-  for st, sp in function() return string.find( string, divide, pos, true ) end do
-    table.insert( arr, string.sub( string, pos, st - 1 ) ) --attach chars left of current divider
+  for st, sp in function() return string.find( str, divide, pos, true ) end do
+    table.insert( arr, string.sub( str, pos, st - 1 ) ) --attach chars left of current divider
     pos = sp + 1 --jump past current divider
   end
-  table.insert( arr, string.sub( string, pos ) ) -- Attach chars right of last divider
+  table.insert( arr, string.sub( str, pos ) ) -- Attach chars right of last divider
   return arr
 end
 
