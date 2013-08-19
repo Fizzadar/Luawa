@@ -16,7 +16,7 @@ local template = {
 --special start
 function template:__start()
     --add token for forms/etc (if regenerated session adds it for us)
-    self:set( 'token', luawa.session:getToken(), true )
+    self:set( 'token', luawa.session:getToken() )
 end
 
 --end function
