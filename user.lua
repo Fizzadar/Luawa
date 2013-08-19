@@ -2,7 +2,7 @@
     file: user.lua
     desc: user management, permissions
 ]]
-local pairs = pairs
+local pairs, ngx, json = pairs, ngx, require( 'cjson.safe' )
 
 local user = {
 	config = {
@@ -167,27 +167,9 @@ function user:login( email, password, hashed )
 		--update user
 		self:setData( update )
 
-		--set id/name cookies
-		self.head:setCookie( self.config.prefix .. 'id', self.user.id, self.config.expire )
-		self.head:setCookie( self.config.prefix .. 'name', self.user.name, self.config.expire )
-
 		--set key cookies
 		for i = 1, self.config.keys do
 			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
-		end
-
-		--get permissions for cookie
-		local permissions = self.db:select(
-			self.config.dbprefix .. 'user_permissions', 'permission',
-			{ group = self.user.group }
-		)
-		if permissions then
-			local permission_string = ''
-			for k, v in pairs( permissions ) do
-				permission_string = permission_string .. v.permission .. ','
-			end
-			permission_string = self.utils.trimRight( permission_string, ',' )
-			self.head:setCookie( self.config.prefix .. 'permissions', permission_string, self.config.expire )
 		end
 
 		return true
@@ -206,11 +188,6 @@ function user:logout()
 	--delete user if there
 	self.user = nil
 
-	--delete cookies
-	self.head:deleteCookie( self.config.prefix .. 'id' )
-	self.head:deleteCookie( self.config.prefix .. 'name' )
-	self.head:deleteCookie( self.config.prefix .. 'permissions' )
-
 	--delete key cookies
 	for i = 1, self.config.keys do
 		self.head:deleteCookie( self.config.prefix .. 'key' .. i )
@@ -220,19 +197,27 @@ function user:logout()
 	return true
 end
 
-
---DB BASED checks
 --check login
 function user:checkLogin()
 	if self.user then return true end --already been logged in
-	if not self:cookieLogin() then return false end
 
-	local wheres = { id = self.head:getCookie( self.config.prefix .. 'id' ) }
+	--build db where table + shm key
+	local wheres, key = {}, ''
 	for i = 1, self.config.keys do
-		wheres['key' .. i] = self.head:getCookie( self.config.prefix .. 'key' .. i )
+		local bit = self.head:getCookie( self.config.prefix .. 'key' .. i )
+		if not bit then return false end
+		wheres['key' .. i] = bit
+		key = key .. bit
 	end
 
-	--get data
+	--try to get data from shm
+	local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ) )
+	if not err then
+		self.user = user
+		return true
+	end
+
+	--get data from mysql (fallback)
 	local user, err = self.db:select(
 		self.config.dbprefix .. 'user', '*',
 		wheres,
@@ -242,6 +227,8 @@ function user:checkLogin()
 
 	--do we have a user?
 	if user and user[1] then
+		--set shared data
+		ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ) )
 		self.user = user[1]
 		return true
 	else
@@ -252,9 +239,14 @@ end
 --check permission
 function user:checkPermission( permission )
 	if not self:checkLogin() then return false end
-	if not self:cookiePermission( permission ) then return false end
 	if not self.user.permissions then self.user.permissions = {} end
 	if self.user.permissions[permission] ~= nil then return self.user.permissions[permission] end
+
+	--try to get shm permission
+	local data, err = ngx.shared[luawa.shm_prefix .. 'user']:get( 'permission_' .. self.user.id .. '_' .. permission:lower() )
+	if data ~= nil then
+		return data
+	end
 
 	--sql query to check
 	local check = self.db:query( [[
@@ -266,12 +258,15 @@ AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
 
 	--permission?
 	if check[1] then
-		self.user.permissions[permission] = true
-		return true
+		data = true
 	else
-		self.user.permissions[permission] = false
-		return false
+		data = false
 	end
+
+	--set for remainder of request + return
+	ngx.shared[luawa.shm_prefix .. 'user']:set( 'permission_' .. self.user.id .. '_' .. permission:lower(), data )
+	self.user.permissions[permission] = data
+	return data
 end
 
 --get data
@@ -301,53 +296,17 @@ function user:setData( fields )
 	if result then
 		for k, v in pairs( fields ) do
 			self.user[k] = v
-			if k == 'name' then
-				self.head:setCookie( self.config.prefix .. 'name', v, self.config.expire )
-			end
 		end
+		--build shared key
+		local key = ''
+		for i = 1, self.config.keys do
+			key = key .. self.user['key' .. i]
+		end
+		--overwrite shared data
+		ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( self.user ) )
 	end
 	return result, err
 end
-
---COOKIE BASED checks
---check cookie login
-function user:cookieLogin()
-	if self.head:getCookie( self.config.prefix .. 'id' ) and self.head:getCookie( self.config.prefix .. 'name' ) then
-		for i = 1, self.config.keys do
-			if not self.head:getCookie( self.config.prefix .. 'key' .. i ) then
-				return false
-			end
-		end
-		return true
-	else
-		return false
-	end
-end
-
---check cookie permission
-function user:cookiePermission( permission )
-	if not self:cookieLogin() or not self.head:getCookie( self.config.prefix .. 'permissions' ) then return false end
-
-	--permission in cookie string?
-	if self.head:getCookie( self.config.prefix .. 'permissions' ):lower():find( permission:lower() ) then
-		return true
-	else
-		return false
-	end
-end
-
---get cookie name
-function user:cookieName()
-	if not self:cookieLogin() then return false end
-	return self.head:getCookie( self.config.prefix .. 'name' )
-end
-
---get cookie user id
-function user:cookieId()
-	if not self:cookieLogin() then return false end
-	return self.head:getCookie( self.config.prefix .. 'id' )
-end
-
 
 --return object
 return user
