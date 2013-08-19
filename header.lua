@@ -8,6 +8,11 @@ local header = {
     cookies = {}
 }
 
+--start
+function header:_start()
+    self.session = luawa.session
+end
+
 --end, send cookie headers, forget them
 function header:_end()
     ngx.header['Set-Cookie'] = self.cookies
@@ -15,7 +20,11 @@ function header:_end()
 end
 
 --redirect
-function header:redirect( url )
+function header:redirect( url, message_type, message_text )
+    if message_type and message_text then
+        self.session:addMessage( message_type, message_text )
+    end
+
     --end modules, we're ending here! (close db connections, etc)
     for k, v in pairs( luawa.modules ) do
         if luawa[v]._end then luawa[v]:_end() end

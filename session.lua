@@ -13,7 +13,7 @@ local session = {
 
 --start
 function session:_start()
-    self.header, self.utils, self.template = luawa.header, luawa.utils, luawa.template
+    self.header, self.utils = luawa.header, luawa.utils
 
     --get session id, or set
     self.id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
@@ -69,8 +69,6 @@ function session:getToken()
     if not token then
         token = self.utils.randomString( 16 )
         self:set( 'token', token )
-        --apply to template
-        self.template:set( 'token', token, true )
     end
 
     return token
@@ -85,6 +83,20 @@ function session:checkToken( token )
     self:getToken()
 
     return result
+end
+
+--add message
+function session:addMessage( type, text )
+    local messages = self:get( '_messages' ) or {}
+    table.insert( messages, { type = type, text = text } )
+    self:set( '_messages', messages )
+end
+
+--get messages
+function session:getMessages()
+    local messages = self:get( '_messages' ) or {}
+    self:set( '_messages', {} )
+    return messages
 end
 
 --return
