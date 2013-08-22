@@ -23,7 +23,7 @@ end
 
 --end
 function user:_end()
-	if self.user then self.user = nil end
+	self.user = nil
 end
 
 --generate a password from text + salt
@@ -214,6 +214,12 @@ function user:checkLogin()
 	local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ) )
 	if not err then
 		self.user = user
+
+		--set key cookies again (to stop expiration)
+		for i = 1, self.config.keys do
+			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+		end
+		
 		return true
 	end
 
@@ -230,6 +236,12 @@ function user:checkLogin()
 		--set shared data
 		ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ) )
 		self.user = user[1]
+
+		--set key cookies again (to stop expiration)
+		for i = 1, self.config.keys do
+			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+		end
+
 		return true
 	else
 		return false
