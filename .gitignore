@@ -1,2 +1,3 @@
 #no cache file please
 cache/*.lua
+.DS_Store
