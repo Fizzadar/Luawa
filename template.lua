@@ -171,7 +171,7 @@ end
 --turn file => lua
 function template:process( code )
     --minimize html? will probably break javascript!
-    if self.config.minimize then code = code:gsub( '[\t\n]', ' ' ) end
+    if self.config.minimize then code = code:gsub( '%s+', ' ' ) end
 
     --prepend bits
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
