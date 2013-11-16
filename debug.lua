@@ -31,7 +31,6 @@ function debug:__end()
         local template = luawa.template
 
         --add logs + template data
-        local data = template:get()
         template:set( 'debug_data', luawa.utils.tableString( template.data ) )
         template:set( 'debug_logs', self.logs )
 
