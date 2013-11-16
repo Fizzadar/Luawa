@@ -51,25 +51,6 @@
 				float: left;
 				width: 50%;
 			}
-			div#debug_info {
-				float: left;
-				width: 100%;
-			}
-			div#debug_messages {
-				float: left;
-				margin: 15px 30px 30px 260px;
-				padding-bottom: 30px;
-				border-bottom: 1px dotted #D7D7D7;
-			}
-			 	div#debug_messages pre {
-			 		overflow: auto;
-					border: 1px dotted #D7D7D7;
-					padding: 10px;
-					font-size: 13px;
-					word-wrap: break-word;
-					float: left;
-					width: 80%;
-			 	}
 	</style>
 
 	<!--script-->
@@ -88,20 +69,6 @@
 		</p>
 
 	</div><!--end top-->
-
-<? if debug.config.enabled then ?>
-	<div id="debug_messages">
-		<? for k, log in pairs( debug.logs ) do ?>
-			<? for k, message in pairs( log ) do ?>
-				<?=message.text ?>
-				<? if message.stack then ?>
-					<pre><?=message.stack ?></pre>
-				<? end ?>
-			<? end ?>
-		<? end ?>
-	</div>
-<? end ?>
-
 
 </body>
 </html>
