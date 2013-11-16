@@ -14,9 +14,11 @@ local io = io
 local ngx = ngx
 
 local luawa = {
+    version = '0.9.0',
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
-    response = '<!--the first request is always special-->'
+    response = '<!--the first request is always special-->',
+    requests = 0
 }
 
 --set the config
@@ -154,6 +156,7 @@ function luawa:processRequest()
     --finally send response content & remove it
     ngx.say( self.response )
     self.response = ''
+    self.requests = self.requests + 1
 end
 
 --process a file
@@ -223,6 +226,8 @@ function luawa:error( type, message )
     self.template.config.dir = 'luawa/'
     self.template.config.minimize = false
     self.template:load( 'error' )
+
+    if self.debug.config.enabled then self.debug:__end() end
 
     --dump response
     ngx.say( self.response )
