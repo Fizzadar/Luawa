@@ -1,12 +1,12 @@
 <!--
 	begin luawa debug
 
-	.__                               
-	|  |  __ _______ __  _  _______   
-	|  | |  |  \__  \\ \/ \/ /\__  \  
+	.__
+	|  |  __ _______ __  _  _______
+	|  | |  |  \__  \\ \/ \/ /\__  \
 	|  |_|  |  // __ \\     /  / __ \_
 	|____/____/(____  /\/\_/  (____  /
-	                \/             \/ 
+	                \/             \/
 -->
 
 <div id="luawa_debug">
@@ -145,49 +145,24 @@
 			border-left: 1px solid #D7D7D7;
 		}
 
-		div#luawa_debug_console {
+		div#luawa_stack_data {
 			bottom: 0;
 			background: #333;
 			color: #FFF;
 		}
-			div.luawa_debug_console h4 {
+			div#luawa_stack_data h4 {
 				color: black;
 			}
-			div.luawa_debug_console pre {
-				width: 100%;
-				overflow: auto;
-				padding: 5px;
-				bottom: 25px;
-				top: 5px;
-				position: absolute;
-				margin: 0 0 0 0;
-			}
-			div.luawa_debug_console form {
-				position: absolute;
-				bottom: 0;
-				height: 25px;
-				background: #FFF;
-				width: 100%;
-			}
-			div.luawa_console_overlay {
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				background: rgba( 0, 0, 0, 0.8 );
-				z-index: 98;
-			}
-				div.luawa_console_overlay a {
-					font-size: 20px;
-					color: white;
-					border-bottom: none;
-					position: absolute;
-					top: 50%;
-					left: 50%;
-					margin-top: -15px;
-					margin-left: -100px;
-				}
+                div#luawa_stack_data table th {
+                    background: #000;
+                }
+                div#luawa_stack_data table tr:hover td {
+                    background: rgb( 0, 0, 117 );
+                }
+                div#luawa_stack_data table tr.luawa_small td {
+                    font-size: 13px;
+                    padding: 1px 5px;
+                }
 
 		div#luawa_internal_data {
 			bottom: 0;
@@ -206,14 +181,12 @@
 		</h4>
 
 		<div class="luawa_messages luawa_sublock">
-		<? 
-			for key, log in pairs( self:get( 'debug_logs' ) ) do ?>
+		<? for key, log in pairs( self:get( 'debug_logs' ) ) do ?>
 			<? for k, message in pairs( log ) do ?>
 				<strong><?=key ?></strong>:
 				<pre><?=message.text ?></pre><br />
 			<? end ?>
-		<? end
-		 ?>
+		<? end ?>
 		</div>
 
 		<div class="luawa_data luawa_sublock">
@@ -227,39 +200,88 @@
 		</h4>
 
 		<div class="luawa_request_data luawa_sublock">
-			<pre><?=luawa.utils.tableString( luawa.request ) ?></pre>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Hostname</td>
+                        <td><?=luawa.request.hostname ?></td>
+                    </tr><tr>
+                        <td>Method</td>
+                        <td><?=luawa.request.method ?></td>
+                    </tr><tr>
+                        <td>Remote IP</td>
+                        <td><?=luawa.request.remote_addr ?></td>
+                    </tr><tr>
+                        <th colspan="2">Headers</th>
+                    </tr>
+                    <? for k, v in pairs( luawa.request.headers ) do ?>
+                        <tr>
+                            <td><?=k ?></td>
+                            <td><?=v ?></td>
+                        </tr>
+                    <? end ?>
+                    <tr>
+                        <th colspan="2">Cookies</th>
+                    </tr>
+                    <? for k, v in pairs( luawa.request.cookie ) do ?>
+                        <tr>
+                            <td><?=k ?></td>
+                            <td><?=v ?></td>
+                        </tr>
+                    <? end ?>
+                    <tr>
+                        <th colspan="2">GET Data</th>
+                    </tr>
+                    <? for k, v in pairs( luawa.request.get ) do ?>
+                        <tr>
+                            <td><?=k ?></td>
+                            <td><?=v ?></td>
+                        </tr>
+                    <? end ?>
+                    <tr>
+                        <th colspan="2">POST data</th>
+                    </tr>
+                    <? for k, v in pairs( luawa.request.post ) do ?>
+                        <tr>
+                            <td><?=k ?></td>
+                            <td><?=v ?></td>
+                        </tr>
+                    <? end ?>
+                </tbody>
+            </table>
 		</div>
 	</div>
 
-	<div id="luawa_debug_console" class="luawa_block luawa_twothird luawa_bottom">
-		<div class="luawa_console_overlay">
-			<a>start console session</a>
-		</div>
-
+	<div id="luawa_stack_data" class="luawa_block luawa_twothird luawa_bottom">
 		<h4>
-			Live Console
+			Stack Calls (most cpu time used first)
 		</h4>
-		
-		<pre>
--bash: l: command not found
-Nicks-MacBook-Air:webroot Fizzadar$ ls
-28 Pixels Later		Deceptive		Legalizr		Pointless Ramblings	Winsauce Studios
-A Lone Ship		Dev Scripts		Libs			Pokemon Russet		brandpop
-Admin Panel		Developer VPS		Lua			Pulsefeed		design_template.php
-Afterburst		DollarJS		LuaDoc			Rentify			editd_graphite
-Alcohive		Fanatical Dev		Luapress		Resource Pile		hn-special
-Altus			Fizzadar		Luaserver		RockYourBoat		iNews
-Audio Asylum		Four Twenty		Luawa			Source Server Stats	indigo sky.psd
-Backbone.mx		Garrys Mod		Mod Outlet		Stack Setup		mdoc
-Better Steam		Guided by People	Net Host Review		ThreeJS			phpinfo.php
-Bits			Hack iTunes		Node			US City Data		util.js
-Browserwards		Horsham Home Security	Open Social Network	WebGL			uup.io
-BuyWhich		Inspired by Pixels	Oxygem			WhereIsIt420		yummymarks
-DBurt			Just Devs		Oxypanel		WhichHost
-Nicks-MacBook-Air:webroot Fizzadar$ mkdir yapt
-		</pre>
 
-		<form>hi</form>
+		<div class="luawa_sublock">
+            <table>
+                <thead><tr>
+                    <th>File</th>
+                    <th>CPU Time</th>
+                    <th>Lines Read</th>
+                </tr></thead>
+                <tbody>
+                    <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
+                        <tr>
+                            <td><?=v.file ?></td>
+                            <td><?=v.data.cpu_time ?></td>
+                            <td><?=v.data.line_count ?></td>
+                        </tr>
+                        <? for c, d in pairs( v.data.funcs ) do ?>
+                            <tr class="luawa_small">
+                                <td></td>
+                                <td><?=c ?></td>
+                                <td><?=d ?></td>
+                            </tr>
+                        <? end ?>
+                    <? end ?>
+                </tbody >
+    		</table>
+        </div>
 	</div>
 
 	<div id="luawa_internal_data" class="luawa_block luawa_third luawa_bottom">
@@ -272,12 +294,15 @@ Nicks-MacBook-Air:webroot Fizzadar$ mkdir yapt
 						<td>Luawa Version:</td>
 						<td><span><?=luawa.version ?></span></td>
 					</tr><tr>
+                        <td>Luawa Root:</td>
+                        <td><span><?=luawa.root_dir ?></span></td>
+                    </tr><tr>
 						<td>Requests Serverd:</td>
 						<td><span><?=luawa.requests ?></span></td>
 					</tr><tr>
 						<td>Code Cache:</td>
 						<td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
-					</tr><tr>	
+					</tr><tr>
 						<td>Template Cache:</td>
 						<td><span><? if luawa.template.config.cache then ?>true<? else ?>false<? end ?></span></td>
 					</tr><tr>
@@ -321,7 +346,8 @@ Nicks-MacBook-Air:webroot Fizzadar$ mkdir yapt
 		});
 
 		//toggle debug
-		debug_button.addEventListener( 'click', function() {
+		debug_button.addEventListener( 'click', function( ev ) {
+            ev.preventDefault();
 			debug_toggle();
 		});
 

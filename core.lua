@@ -176,13 +176,13 @@ function luawa:processFile( file )
         --close file
         f:close()
 
-        --prepend some stuff
-        string = 'local function _luawa_app()\n\n' .. string
-        --append
-        string = string .. '\n\nend return _luawa_app'
-
         --generate cache_id
         cache_id = file:gsub( '[^%w]', '_' )
+
+        --prepend some stuff
+        string = 'local function _' .. cache_id .. '()\n\n' .. string
+        --append
+        string = string .. '\n\nend return _' .. cache_id
 
         --cache?
         if self.cache then
