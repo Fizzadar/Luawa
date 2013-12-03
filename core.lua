@@ -238,6 +238,18 @@ function luawa:error( type, message )
     return false
 end
 
+--exit (for debug)
+function luawa:exit( object )
+    ngx.say( 'Luawa ' .. self.version .. ' dev:' )
+    ngx.say( '<pre>' .. self.utils.tableString( object ) .. '</pre>' )
+
+    if self.debug.config.enabled then
+        self.debug:__end()
+        ngx.say( luawa.response )
+    end
+
+    ngx.exit( 200 )
+end
 
 --return
 return luawa
