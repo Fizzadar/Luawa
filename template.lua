@@ -38,6 +38,7 @@ function template:_end()
         clean( self.data )
 
         luawa.header:setHeader( 'Content-Type', 'text/json' )
+        self:set( 'messages', luawa.session:getMessages(), true )
         local out, err = json.encode( self.data )
         if out then
             luawa.response = out
