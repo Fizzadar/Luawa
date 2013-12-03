@@ -35,7 +35,7 @@ function debug:_start()
                 path = path:gsub( luawa.root_dir, '' )
             else
                 local a, b, func_name = info.source:find( '^local function _([%w_]+)' )
-                path = func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
+                path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
             end
 
             local time = os.clock()
@@ -78,11 +78,11 @@ function debug:__end()
             table.insert( d, { file = k, data = v } )
         end
         table.sort( d, function( a, b ) return a.data.cpu_time > b.data.cpu_time end )
-        template:set( 'debug_stack', d )
 
-        --add logs + template data
-        template:set( 'debug_data', luawa.utils.tableString( template.data ) )
+        --add logs, then template data, then stack
+        template:set( 'debug_data', luawa.utils.tableCopy( template.data ) )
         template:set( 'debug_logs', self.logs )
+        template:set( 'debug_stack', d )
 
         --load debug template
         template.config.dir = 'luawa/'

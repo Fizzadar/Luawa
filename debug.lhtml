@@ -190,7 +190,7 @@
 		</div>
 
 		<div class="luawa_data luawa_sublock">
-			<pre><?=luawa.utils.tableString( self:get() ) ?></pre>
+			<pre><?=luawa.utils.tableString( self:get( 'debug_data' ) ) ?></pre>
 		</div>
 	</div>
 
