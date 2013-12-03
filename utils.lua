@@ -8,6 +8,23 @@ local str = require( luawa.root_dir .. 'luawa/lib/string' )
 
 local utils = {}
 
+function utils.tableCopy( table )
+    local function tableCopy( table )
+        local copy = {}
+        for k, v in pairs( table ) do
+            if type( v ) == 'table' then
+                copy[k] = tableCopy( v )
+            else
+                copy[k] = v
+            end
+        end
+
+        return copy
+    end
+
+    return tableCopy( table )
+end
+
 --return tables and any number of sub-tables as a string
 function utils.tableString( table, level )
     local function tableString( table, level )
