@@ -43,7 +43,7 @@ function template:_end()
         if out then
             luawa.response = out
         else
-            luawa.response = json.encode( { error = err } )
+            luawa.response = json.encode({ error = err })
         end
         self.api = false
     end
@@ -51,7 +51,7 @@ function template:_end()
     self:clear()
 end
 
---set data
+-- Set data
 function template:set( key, value, api )
     --not api or api enabled
     if not self.api or api then
@@ -59,7 +59,7 @@ function template:set( key, value, api )
     end
 end
 
---add data (makes table value must be table)
+-- Add data (makes table value must be table)
 function template:add( key, value, api )
     if not self.api or api then
         if not self.data[key] then
@@ -74,25 +74,25 @@ function template:add( key, value, api )
     end
 end
 
---get data (dump all when no key)
+-- Get data (dump all when no key)
 function template:get( key )
     if not key then return self.data end
     return self.data[key]
 end
 
---clear data
+-- Clear data
 function template:clear()
     self.data = {}
 end
 
---add raw code to current output
+-- Add raw code to current output
 function template:put( content )
     if self.api then return end
 
     luawa.response = luawa.response .. tostring( content )
 end
 
---load a lhtml file, convert code to lua, run and add string to end of response.content
+-- Load a lhtml file, convert code to lua, run and add string to end of response.content
 function template:load( file, inline )
     if self.api then return true end
 

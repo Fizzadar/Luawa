@@ -2,12 +2,14 @@
     file: utils.lua
     desc: useful functions (some php-like)
 ]]
+local json = require( 'cjson.safe' )
 local hasher = require( luawa.root_dir .. 'luawa/lib/sha512' )
 local random = require( luawa.root_dir .. 'luawa/lib/random' )
 local str = require( luawa.root_dir .. 'luawa/lib/string' )
 
 local utils = {}
 
+-- Copy/duplicate a table
 function utils.tableCopy( table )
     local function tableCopy( table )
         local copy = {}
@@ -25,7 +27,7 @@ function utils.tableCopy( table )
     return tableCopy( table )
 end
 
---return tables and any number of sub-tables as a string
+-- Return tables and any number of sub-tables as a string
 function utils.tableString( table, level )
     local function tableString( table, level )
         --not a table?
@@ -51,7 +53,16 @@ function utils.tableString( table, level )
     return tableString( table, level )
 end
 
---html => html entities
+-- Checks if a table has a list of keys
+function utils.tableKeys( table, keys )
+    for k, v in pairs( keys ) do
+        if not table[v] then return false end
+    end
+
+    return true
+end
+
+-- HTML => entities
 function utils.htmlEnts( str )
     local entities = {
         ['¡'] = '&iexcl;',
@@ -161,68 +172,78 @@ function utils.htmlEnts( str )
     return str
 end
 
---alphanumeric-ify string
+-- Alphanumeric-ify string
 function utils.alphaNumerify( str )
     return str:gsub( '%W', '' )
 end
 
---capitalize first character
+-- Capitalize first character
 function utils.capitalizeFirst( str )
     return str:gsub( '^%l', string.upper )
 end
 
---check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
+-- Check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
 function utils.isEmail( str )
     if str:match( '@' ) then
         return true
     end
 end
 
---check an url
+-- Check an url
 function utils.isUrl( str )
     if str:match( '^https?://' ) then
         return true
     end
 end
 
---trim string
+-- Trim string
 function utils.trim( str )
     return str:match( '^%s*(.-)%s*$' )
 end
 
---rtrim string (remove chars from right end)
+-- Trim right string (remove chars from right end)
 function utils.trimRight( str, chars )
     return str:match( '^(.-)[' .. chars .. ']*$' )
 end
 
---ltrim string (remove chars from left end)
+-- Trim left string (remove chars from left end)
 function utils.trimLeft( str, chars )
     return str:match( '^[' .. chars .. ']*(.-)$' )
 end
 
---random string
+-- Random string
 function utils.randomString( length )
     return str.to_hex( random.bytes( length ) )
 end
 
---digest
+-- Digest (sha512)
 function utils.digest( string )
     local sha = hasher:new()
     sha:update( string )
     return str.to_hex( sha:final() )
 end
 
---urldecode
+-- URL decode
 function utils.urlDecode( str )
     return ngx.unescape_uri( str )
 end
 
---urlencode
+-- URL encode
 function utils.urlEncode( str )
     return ngx.escape_uri( str )
 end
 
---explode, credit: http://richard.warburton.it
+-- JSON Encode
+function utils.jsonEncode( object )
+    return json.encode( object )
+end
+
+-- JSON decode
+function utils.jsonDecode( json )
+    return json.decode( json )
+end
+
+-- Explode, credit: http://richard.warburton.it
 function utils.explode( str, divide )
   if divide == '' then return false end
   local pos, arr = 0, {}

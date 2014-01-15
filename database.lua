@@ -141,9 +141,9 @@ function database:select( table, fields, wheres, order, limit, offset, group )
     --group
     if group then sql = sql .. ' GROUP BY ' .. group end
     --order
-    if order then sql = sql .. 'ORDER BY ' .. order .. ' ' end
+    if order then sql = sql .. ' ORDER BY ' .. order end
     --limit
-    if limit then sql = sql .. 'LIMIT ' .. limit end
+    if limit then sql = sql .. ' LIMIT ' .. limit end
     --offset
     if offset then sql = sql .. ' OFFSET ' .. offset end
 
@@ -151,7 +151,7 @@ function database:select( table, fields, wheres, order, limit, offset, group )
 end
 
 --run a delete request
-function database:delete( table, wheres )
+function database:delete( table, wheres, limit )
     local sql
 
     --table
@@ -159,6 +159,9 @@ function database:delete( table, wheres )
 
     --wheres
     sql = sql .. self:wheresToSql( wheres )
+
+    --limit
+    if limit then sql = sql .. ' LIMIT ' .. limit end
 
     return self:query( sql )
 end
@@ -227,7 +230,7 @@ function database:search( table, search_fields, fetch_fields, query )
 
     sql = 'SELECT (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) AS score, ' .. fetch_fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
     sql = sql .. 'WHERE (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) > 0'
-    
+
     return self:query( sql )
 end
 
