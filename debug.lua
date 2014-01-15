@@ -2,21 +2,34 @@
     file: debug.lua
     desc: debug
 ]]
-local lua_debug, os = debug, os
+local tonumber = tonumber
+local lua_debug, os, ffi = debug, os, require( 'ffi' )
+
+--many thanks to John Graham-Cumming's lulip lua profiler:
+--https://github.com/jgrahamc/lulip
+ffi.cdef([[
+  typedef long time_t;
+
+  typedef struct timeval {
+    time_t tv_sec;
+    time_t tv_usec;
+  } timeval;
+
+  int gettimeofday(struct timeval* t, void* tzp);
+]])
+local gettimeofday_struct = ffi.new( 'timeval' )
+local function gettimeofday()
+   ffi.C.gettimeofday( gettimeofday_struct, nil )
+   return tonumber( gettimeofday_struct.tv_sec ) * 1000000 + tonumber( gettimeofday_struct.tv_usec )
+end
 
 local debug = {
-    config = {},
-    logs = {
-        messages = {},
-        errors = {},
-        accesses = {},
-        queries = {}
-    },
-    stack = {}
+    config = {}
 }
 
 function debug:_start()
-    self.time = os.clock()
+    self.stack = {}
+    self.time = gettimeofday()
 
     --reset the logs
     self.logs = {
@@ -38,25 +51,26 @@ function debug:_start()
                 path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
             end
 
-            local time = os.clock()
-            local time_diff = ( os.clock() - self.time ) * 1000
+            local time = gettimeofday()
+            local time_diff = ( time - self.time ) / 1000
             self.time = time
 
             if self.stack[path] then
-                self.stack[path].line_count = self.stack[path].line_count + 1
-                self.stack[path].cpu_time = self.stack[path].cpu_time + time_diff
+                self.stack[path].lines = self.stack[path].lines + 1
+                self.stack[path].time = self.stack[path].time + time_diff
                 local func_name = info.name or 'unknown'
                 if not self.stack[path].funcs[func_name] then
-                    self.stack[path].funcs[func_name] = 1
+                    self.stack[path].funcs[func_name] = { lines = 1, time = time_diff }
                 else
-                    self.stack[path].funcs[func_name] = self.stack[path].funcs[func_name] + 1
+                    self.stack[path].funcs[func_name].lines = self.stack[path].funcs[func_name].lines + 1
+                    self.stack[path].funcs[func_name].time = self.stack[path].funcs[func_name].time + time_diff
                 end
             else
                 local funcs = {}
-                funcs[info.name or 'unknown'] = 1
+                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff }
                 self.stack[path] = {
-                    line_count = 1,
-                    cpu_time = time_diff,
+                    lines = 1,
+                    time = time_diff,
                     funcs = funcs
                 }
             end
@@ -66,23 +80,30 @@ end
 
 --end special end not _end
 function debug:__end()
-    lua_debug.sethook()
 
     --include debug?
     if self.config.enabled then
+        lua_debug.sethook()
         local template = luawa.template
 
         --work out stack
-        local d = {}
+        local stack, total_time, luawa_time = {}, 0, 0
         for k, v in pairs( self.stack ) do
-            table.insert( d, { file = k, data = v } )
+            if k:find( '^luawa/[^%/]+%.lua$' ) then
+                luawa_time = luawa_time + v.time
+            end
+            table.insert( stack, { file = k, data = v } )
+            total_time = total_time + v.time
         end
-        table.sort( d, function( a, b ) return a.data.cpu_time > b.data.cpu_time end )
+        table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
+
 
         --add logs, then template data, then stack
         template:set( 'debug_data', luawa.utils.tableCopy( template.data ) )
         template:set( 'debug_logs', self.logs )
-        template:set( 'debug_stack', d )
+        template:set( 'debug_stack', stack )
+        template:set( 'debug_total_time', total_time )
+        template:set( 'debug_luawa_time', luawa_time )
 
         --load debug template
         template.config.dir = 'luawa/'

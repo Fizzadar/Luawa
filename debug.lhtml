@@ -162,6 +162,7 @@
                 div#luawa_stack_data table tr.luawa_small td {
                     font-size: 13px;
                     padding: 1px 5px;
+                    background: #555;
                 }
 
 		div#luawa_internal_data {
@@ -254,28 +255,25 @@
 
 	<div id="luawa_stack_data" class="luawa_block luawa_twothird luawa_bottom">
 		<h4>
-			Stack Calls (most cpu time used first)
+			Stack Calls
 		</h4>
 
 		<div class="luawa_sublock">
             <table>
                 <thead><tr>
                     <th>File</th>
-                    <th>CPU Time</th>
-                    <th>Lines Read</th>
+                    <th>Time</th>
                 </tr></thead>
                 <tbody>
                     <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
                         <tr>
                             <td><?=v.file ?></td>
-                            <td><?=v.data.cpu_time ?></td>
-                            <td><?=v.data.line_count ?></td>
+                            <td><?=v.data.time ?>ms</td>
                         </tr>
                         <? for c, d in pairs( v.data.funcs ) do ?>
                             <tr class="luawa_small">
-                                <td></td>
                                 <td><?=c ?></td>
-                                <td><?=d ?></td>
+                                <td><?=d.time ?>ms</td>
                             </tr>
                         <? end ?>
                     <? end ?>
@@ -290,7 +288,13 @@
 		<div class="nginx_status luawa_sublock">
 			<table>
 				<tbody>
-					<tr>
+                    <tr>
+                        <td>Total Request Time:</td>
+                        <td><span><?=self:get( 'debug_total_time' ) ?>ms</span></td>
+					</tr><tr>
+                        <td>Luawa Time:</td>
+                        <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
+                    </tr><tr>
 						<td>Luawa Version:</td>
 						<td><span><?=luawa.version ?></span></td>
 					</tr><tr>
@@ -300,11 +304,8 @@
 						<td>Requests Serverd:</td>
 						<td><span><?=luawa.requests ?></span></td>
 					</tr><tr>
-						<td>Code Cache:</td>
+						<td>Cache:</td>
 						<td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
-					</tr><tr>
-						<td>Template Cache:</td>
-						<td><span><? if luawa.template.config.cache then ?>true<? else ?>false<? end ?></span></td>
 					</tr><tr>
 						<th colspan="2">Session Objects</th>
 					</tr><tr>
