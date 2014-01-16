@@ -7,6 +7,7 @@ The following Lua modules are required (I recommend using Luarocks to install):
 + LuaJIT 2
 + Lua cjson
 
-## Docs
+## Docs/etc
 + [Documentation](http://doc.luawa.com) - only partial
 + See https://github.com/Fizzadar/yummymarks for an example app
++ [Trello](https://trello.com/b/HghoF8U2/luawa) - backlog/pipeline/ideas
