@@ -67,7 +67,7 @@ function debug:_start()
                 end
             else
                 local funcs = {}
-                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff }
+                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff, name = info }
                 self.stack[path] = {
                     lines = 1,
                     time = time_diff,
@@ -88,12 +88,16 @@ function debug:__end()
 
         --work out stack
         local stack, total_time, luawa_time = {}, 0, 0
-        for k, v in pairs( self.stack ) do
-            if k:find( '^luawa/[^%/]+%.lua$' ) then
-                luawa_time = luawa_time + v.time
+        for file, data in pairs( self.stack ) do
+            if file:find( '^luawa/[^%/]+%.lua$' ) then
+                for name, func in pairs( data.funcs ) do
+                    if name ~= 'unknown' then
+                        luawa_time = luawa_time + func.time
+                    end
+                end
             end
-            table.insert( stack, { file = k, data = v } )
-            total_time = total_time + v.time
+            table.insert( stack, { file = file, data = data } )
+            total_time = total_time + data.time
         end
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
 
