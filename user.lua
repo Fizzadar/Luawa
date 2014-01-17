@@ -101,7 +101,7 @@ function user:resetPasswordLogin( email, key )
 end
 
 --register a user
-function user:register( email, password, name )
+function user:register( email, password, name, group )
 	if not name then name = 'Unknown' end
 	if password == '' then return false, 'Invalid password' end
 	if not self.utils.isEmail( email ) then return false, 'Invalid email' end
@@ -120,6 +120,12 @@ function user:register( email, password, name )
 	for i = 1, self.config.keys do
 		table.insert( fields, 'key' .. i )
 		table.insert( user, self:generateKey( password ) )
+	end
+
+	--group?
+	if group then
+		table.insert( fields, 'group' )
+		table.insert( user, group )
 	end
 
 	--insert user
@@ -219,7 +225,7 @@ function user:checkLogin()
 		for i = 1, self.config.keys do
 			self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
 		end
-		
+
 		return true
 	end
 
