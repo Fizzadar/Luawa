@@ -263,17 +263,20 @@
                 <thead><tr>
                     <th>File</th>
                     <th>Time</th>
+                    <th>Lines</th>
                 </tr></thead>
                 <tbody>
                     <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
                         <tr>
                             <td><?=v.file ?></td>
                             <td><?=v.data.time ?>ms</td>
+                            <td><?=v.data.lines ?></td>
                         </tr>
                         <? for c, d in pairs( v.data.funcs ) do ?>
                             <tr class="luawa_small">
                                 <td><?=c ?></td>
                                 <td><?=d.time ?>ms</td>
+                                <td><?=d.lines ?></td>
                             </tr>
                         <? end ?>
                     <? end ?>
@@ -301,7 +304,7 @@
                         <td>Luawa Root:</td>
                         <td><span><?=luawa.root_dir ?></span></td>
                     </tr><tr>
-						<td>Requests Serverd:</td>
+						<td>Requests Served:</td>
 						<td><span><?=luawa.requests ?></span></td>
 					</tr><tr>
 						<td>Cache:</td>
