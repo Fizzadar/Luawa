@@ -88,10 +88,10 @@
 			width: 36%;
 		}
 		.luawa_top {
-			height: 60%;
+			height: 45%;
 		}
 		.luawa_bottom {
-			height: 40%;
+			height: 55%;
 		}
 			.luawa_block div {
 				float: left;
@@ -304,9 +304,15 @@
                         <td>Luawa Time:</td>
                         <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
                     </tr><tr>
-						<td>Luawa Version:</td>
-						<td><span><?=luawa.version ?></span></td>
-					</tr><tr>
+                        <td>Luawa Version:</td>
+                        <td><span><?=luawa.version ?></span></td>
+                    </tr><tr>
+                        <td>Nginx Version:</td>
+                        <td><span><?=self:get( 'nginx_version' ) ?></span></td>
+                    </tr><tr>
+                        <td>Nginx-Lua Version:</td>
+                        <td><span><?=self:get( 'nginx_lua_version' ) ?></span></td>
+                    </tr><tr>
                         <td>Luawa Root:</td>
                         <td><span><?=luawa.root_dir ?></span></td>
                     </tr><tr>

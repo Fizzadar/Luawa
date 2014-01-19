@@ -109,6 +109,16 @@ function debug:__end()
         template:set( 'debug_total_time', total_time )
         template:set( 'debug_luawa_time', luawa_time )
 
+        --versions
+        local a, b, v1, v2, v3 = tostring( ngx.config.nginx_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
+        v1 = v1:len() > 0 and v1 or 0
+        v2 = v2:len() > 0 and v2 or 0
+        template:set( 'nginx_version', v1 .. '.' .. v2 .. '.' .. v3 )
+        local a, b, v1, v2, v3 = tostring( ngx.config.ngx_lua_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
+        v1 = v1:len() > 0 and v1 or 0
+        v2 = v2:len() > 0 and v2 or 0
+        template:set( 'nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3 )
+
         --load debug template
         template.config.dir = 'luawa/'
         template.config.minimize = false
