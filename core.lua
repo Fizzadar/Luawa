@@ -14,7 +14,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.0',
+    version = '0.9.1',
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
     response = '<!--the first request is always special-->',
