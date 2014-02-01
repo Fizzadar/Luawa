@@ -239,7 +239,7 @@ function luawa:error( type, message )
     --dump response
     ngx.say( self.response )
 
-    --edit nginx (stop other output)
+    --exit nginx (stop other output)
     ngx.exit( ngx.HTTP_OK )
 
     return false
@@ -255,7 +255,7 @@ function luawa:exit( object )
         ngx.say( luawa.response )
     end
 
-    ngx.exit( 200 )
+    ngx.exit( ngx.HTTP_OK )
 end
 
 --return
