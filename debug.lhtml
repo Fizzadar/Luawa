@@ -386,6 +386,11 @@
 			document.body.style.overflow = 'auto';
 		});
 
+        //resize if saved
+        if( sessionStorage.getItem( 'luawa_debug_top' )) {
+            debug.style.top = sessionStorage.getItem( 'luawa_debug_top' );
+        }
+
         //hacky- but we need the height
         var height = debug.clientHeight;
         if( height == 0 ) {
@@ -401,6 +406,7 @@
                 mouse_y = ev.clientY + height;
             }
             debug.style.top = ( window.innerHeight - ( mouse_y - ev.clientY ) ) + 'px';
+            sessionStorage.setItem( 'luawa_debug_top', debug.style.top );
         };
         debug_resizer.addEventListener( 'mousedown', function( ev ) {
             mouse_y = false;

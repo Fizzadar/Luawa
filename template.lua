@@ -93,7 +93,7 @@ function template:put( content )
 end
 
 -- Load a lhtml file, convert code to lua, run and add string to end of response.content
-function template:load( file, inline )
+function template:load( file )
     if self.api then return true end
 
     --attempt to get cache_id
@@ -111,15 +111,16 @@ function template:load( file, inline )
         --close file
         f:close()
 
+        local func_name = file:gsub( '/', '_' )
         --process string lhtml => lua
         string = self:process( string )
         --prepend some stuff
-        string = 'local function _luawa_template()\n\n' .. string
+        string = 'local function _' .. func_name .. '()\n' .. string
         --append
-        string = string .. '\n\nend return _luawa_template'
+        string = string .. '\nend return _' .. func_name .. ''
 
         --generate cache_id
-        cache_id = self.config.dir:gsub( '/', '_' ) .. file:gsub( '/', '_' )
+        cache_id = self.config.dir:gsub( '/', '_' ) .. func_name
 
         --cache?
         if luawa.cache then
@@ -148,12 +149,8 @@ function template:load( file, inline )
 
     --if ok, add to output
     if status then
-        if inline then
-            return err
-        else
-            luawa.response = luawa.response .. err
-            return true
-        end
+        luawa.response = luawa.response .. err
+        return true
     else
         return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err )
     end

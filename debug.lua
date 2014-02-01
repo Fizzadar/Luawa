@@ -67,7 +67,7 @@ function debug:_start()
                 end
             else
                 local funcs = {}
-                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff, name = info }
+                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff }
                 self.stack[path] = {
                     lines = 1,
                     time = time_diff,
