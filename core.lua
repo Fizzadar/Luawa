@@ -14,7 +14,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.1',
+    version = '0.9.2',
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
     response = '<!--the first request is always special-->',
@@ -83,7 +83,8 @@ function luawa:prepareRequest()
         headers = ngx.req.get_headers(),
         get = ngx.req.get_uri_args(),
         post = {},
-        cookie = {}
+        cookie = {},
+        tmp = {}
     };
     --set hostname
     request.hostname = request.headers.host:gsub( ':[0-9]+', '' ) or self.hostname
@@ -161,31 +162,39 @@ end
 
 --process a file
 function luawa:processFile( file )
-    --try to fetch cache id
-    local cache_id = ngx.shared[self.shm_prefix .. 'cache_app']:get( file )
     local func
 
-    --not cached?
-    if not cache_id then
-        --read app file
-        local f, err = io.open( self.root_dir .. file .. '.lua', 'r' )
-        if not f then return self:error( 500, 'Cant open/access file: ' .. err ) end
-        --read the file
-        local string, err = f:read( '*a' )
-        if not string then return self:error( 500, 'File read error: ' .. err ) end
-        --close file
-        f:close()
+    --cache should only be off in dev-mode
+    if not self.cache then
+        func = function()
+            return loadfile( '/' .. self.root_dir .. file .. '.lua' )()
+        end
 
-        --generate cache_id
-        cache_id = file:gsub( '[^%w]', '_' )
+    --cache/production
+    else
+        --try to fetch cache id
+        local cache_id = ngx.shared[self.shm_prefix .. 'cache_app']:get( file )
 
-        --prepend some stuff
-        string = 'local function _' .. cache_id .. '()\n\n' .. string
-        --append
-        string = string .. '\n\nend return _' .. cache_id
+        if cache_id then
+            func = require( self.root_dir .. 'luawa/cache/' .. cache_id )
+        else
+            --read app file
+            local f, err = io.open( self.root_dir .. file .. '.lua', 'r' )
+            if not f then return self:error( 500, 'Cant open/access file: ' .. err ) end
+            --read the file
+            local string, err = f:read( '*a' )
+            if not string then return self:error( 500, 'File read error: ' .. err ) end
+            --close file
+            f:close()
 
-        --cache?
-        if self.cache then
+            --generate cache_id
+            cache_id = file:gsub( '[^%w]', '_' )
+
+            --prepend some stuff
+            string = 'local function _' .. cache_id .. '()\n' .. string
+            --append
+            string = string .. '\nend return _' .. cache_id
+
             --now let's save this as a file
             local f, err = io.open( self.root_dir .. 'luawa/cache/' .. cache_id .. '.lua', 'w+' )
             if not f then return self:error( 500, 'File error: ' .. err ) end
@@ -197,21 +206,22 @@ function luawa:processFile( file )
 
             --save to cache
             ngx.shared[self.shm_prefix .. 'cache_app']:set( file, cache_id )
-        else
+
+            --build function
             func, err = loadstring( string )
             if not func then return self:error( 500, err ) end
             func = func()
         end
     end
 
-    --require file, call it safely
-    func = func or require( self.root_dir .. 'luawa/cache/' .. cache_id )
+    --call the function safely
     local status, err = pcall( func )
 
     --error?
     if not status then
         self:error( 500, 'File: ' .. file .. '.lua, error: ' .. err )
     end
+
 
     --done!
     return true
