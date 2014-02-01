@@ -1,8 +1,6 @@
---[[
-    file: template.lua
-    desc: basic template system for html + api
-]]
---json & hashing
+-- File: template.lua
+-- Desc: lhtml templating
+
 local json = require( 'cjson.safe' )
 local ngx, tostring, pcall, loadstring, io, table, type = ngx, tostring, pcall, loadstring, io, table, type
 

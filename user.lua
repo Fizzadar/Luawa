@@ -1,8 +1,9 @@
---[[
-    file: user.lua
-    desc: user management, permissions
-]]
-local pairs, ngx, json = pairs, ngx, require( 'cjson.safe' )
+-- File: user.lua
+-- Desc: deals with user logins, permissions & groups
+
+local pairs = pairs
+local ngx = ngx
+local json = require( 'cjson.safe' )
 
 local user = {
 	config = {

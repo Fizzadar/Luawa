@@ -1,7 +1,6 @@
---[[
-    file: utils.lua
-    desc: useful functions (some php-like)
-]]
+-- File: utils.lua
+-- Desc: useful utility functions
+
 local json = require( 'cjson.safe' )
 local hasher = require( luawa.root_dir .. 'luawa/lib/sha512' )
 local random = require( luawa.root_dir .. 'luawa/lib/random' )

@@ -1,8 +1,6 @@
---[[
-    file: session.lua
-    desc: read/write session data (stored in nginx shared memory)
-]]
---json & hashing
+-- File: session.lua
+-- Desc: deals with session management (memory-based, shared between ngx workers)
+
 local json = require( 'cjson.safe' )
 
 local session = {

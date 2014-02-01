@@ -1,9 +1,10 @@
---[[
-    file: debug.lua
-    desc: debug
-]]
+-- File: debug.lua
+-- Desc: helps debug & profile Luawa apps
+
 local tonumber = tonumber
-local lua_debug, os, ffi = debug, os, require( 'ffi' )
+local lua_debug = debug
+local os = os
+local ffi = require( 'ffi' )
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
 --https://github.com/jgrahamc/lulip

@@ -1,8 +1,9 @@
---[[
-    file: header.lua
-    desc: read/write headers/cookies
-]]
-local os, table, ngx = os, table, ngx
+-- File: header.lua
+-- Desc: deals with HTTP headers & cookies
+
+local os = os
+local table = table
+local ngx = ngx
 
 local header = {
     cookies = {}

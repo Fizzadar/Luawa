@@ -1,9 +1,6 @@
---[[
-    file: core.lua
-    desc: main luawa file
-        most importantly takes http requests as a table and returns a response as a table
-]]
---local optimization
+-- File: core.lua
+-- Desc: Luawa definition
+
 local pairs = pairs
 local require = require
 local loadstring = loadstring

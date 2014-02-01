@@ -1,7 +1,6 @@
---[[
-    file: database.lua
-    desc: database abstraction/management
-]]
+-- File: database.lua
+-- Desc: connects to the database!
+
 local pairs = pairs
 local type = type
 local tostring = tostring
