@@ -3,7 +3,6 @@
 
 local tonumber = tonumber
 local lua_debug = debug
-local os = os
 local ffi = require( 'ffi' )
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
@@ -25,7 +24,13 @@ local function gettimeofday()
 end
 
 local debug = {
-    config = {}
+    config = {},
+    logs = {
+        messages = {},
+        errors = {},
+        accesses = {},
+        queries = {}
+    }
 }
 
 function debug:_start()

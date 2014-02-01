@@ -388,14 +388,14 @@
 
         //resize if saved
         if( sessionStorage.getItem( 'luawa_debug_top' )) {
-            debug.style.top = sessionStorage.getItem( 'luawa_debug_top' );
+            debug.style.top = sessionStorage.getItem( 'luawa_debug_top' ) + 'px';
         }
 
         //hacky- but we need the height
-        var height = debug.clientHeight;
+        var height = debug.offsetTop;
         if( height == 0 ) {
             debug_toggle();
-            height = debug.clientHeight;
+            height = debug.offsetTop;
             debug_toggle();
         }
         //resize debug
@@ -403,19 +403,20 @@
         var mouse_over = function( ev ) {
             ev.preventDefault();
             if( !mouse_y ) {
-                mouse_y = ev.clientY + height;
+                mouse_y = ev.clientY;
             }
-            debug.style.top = ( window.innerHeight - ( mouse_y - ev.clientY ) ) + 'px';
-            sessionStorage.setItem( 'luawa_debug_top', debug.style.top );
+            var diff = ev.clientY - mouse_y;
+            var top = height + diff;
+            if( top < 0 )
+                top = 0;
+            debug.style.top = top + 'px';
+            sessionStorage.setItem( 'luawa_debug_top', top );
         };
         debug_resizer.addEventListener( 'mousedown', function( ev ) {
-            mouse_y = false;
             window.addEventListener( 'mousemove', mouse_over );
 
         });
         window.addEventListener( 'mouseup', function( ev ) {
-            mouse_y = false;
-            height = debug.clientHeight;
             window.removeEventListener( 'mousemove', mouse_over );
         });
 
