@@ -188,10 +188,11 @@ function database:update( table, values, wheres )
 end
 
 --run a insert request
-function database:insert( table, fields, values, replace )
+function database:insert( table, fields, values, replace, delayed )
     local sql, value
     local cmd = 'INSERT'
     if replace then cmd = 'REPLACE' end
+    if delayed then cmd = 'INSERT DELAYED' end
 
     --escape input values
     values = self:escape( values )
@@ -221,6 +222,10 @@ end
 --insert/replace request
 function database:replace( table, fields, values )
     return self:insert( table, fields, values, true )
+end
+--insert delayed request
+function database:delayed( table, fields, values )
+    return self:insert( table, fields, values, false, true )
 end
 
 --run a search request
