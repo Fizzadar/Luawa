@@ -17,15 +17,11 @@ local database = {
 function database:_start()
     --utils
     self.utils = luawa.utils
-
-    --memcaching?
-    if self.config.memcache then
-        --sync
-    end
 end
 
 --end
 function database:_end()
+    --prevent 'Mysql error: failed to send query: closed' when caching
     if self.db then
         self.db:close()
         self.db = nil
@@ -64,7 +60,7 @@ function database:connect()
         user = self.config.user,
         password = self.config.pass,
         database = self.config.name
-    } )
+    })
     if not ok then return false, 'failed to connect to database: ' .. err end
 
     --assign to self
@@ -98,41 +94,43 @@ function database:query( sql )
 end
 
 function database:wheresToSql( wheres )
-    local where = ''
+    local where_bits = {}
+
     if wheres then
         --where
         wheres = self:escape( wheres )
         --loop them
         for k, v in pairs( wheres ) do
             if type( v ) == 'table' then
-                where = where .. 'AND ('
+                local bits, string = {}, '('
                 for c, d in ipairs( v ) do
-                    where = where .. '`' .. k .. '` = ' .. d .. ' OR '
+                    table.insert( bits, '`' .. k .. '` = ' .. d )
                     v[c] = nil
                 end
                 for c, d in pairs( v ) do
-                    where = where .. '`' .. c .. '` = ' .. d .. ' OR '
+                    table.insert( bits, '`' .. c .. '` = ' .. d )
                 end
-                where = self.utils.trimRight( where, 'OR ' )
-                where = where .. ')\n'
+                string = string .. table.concat( bits, ' OR ' ) .. ')\n'
+                table.insert( where_bits, string )
             else
-                where = where .. 'AND `' .. k .. '` = ' .. v .. '\n'
+                table.insert( where_bits, '`' .. k .. '` = ' .. v .. '\n' )
             end
-        end
-        if where ~= '' then
-            where = 'WHERE\n' .. self.utils.trimLeft( where, 'AND' )
         end
     end
 
-    return where
+    if #where_bits > 0 then
+        return 'WHERE ' .. table.concat( where_bits, ' AND ' )
+    end
+
+    return ''
 end
 
 --run a select request (build query + run)
-function database:select( table, fields, wheres, order, limit, offset, group )
+function database:select( table_name, fields, wheres, order, limit, offset, group )
     local sql
 
     --table & fields
-    sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
+    sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
 
     --wheres
     sql = sql .. self:wheresToSql( wheres )
@@ -150,11 +148,11 @@ function database:select( table, fields, wheres, order, limit, offset, group )
 end
 
 --run a delete request
-function database:delete( table, wheres, limit )
+function database:delete( table_name, wheres, limit )
     local sql
 
     --table
-    sql = 'DELETE FROM ' .. self.config.prefix .. table .. ' '
+    sql = 'DELETE FROM ' .. self.config.prefix .. table_name .. ' '
 
     --wheres
     sql = sql .. self:wheresToSql( wheres )
@@ -166,29 +164,29 @@ function database:delete( table, wheres, limit )
 end
 
 --run a update request
-function database:update( table, values, wheres )
+function database:update( table_name, values, wheres )
     local sql
 
     --escape input values
     values = self:escape( values )
 
     --table
-    sql = 'UPDATE ' .. self.config.prefix .. table .. ' '
+    sql = 'UPDATE ' .. self.config.prefix .. table_name .. ' '
     --sets
     sql = sql .. 'SET '
+    local bits = {}
     for k, v in pairs( values ) do
-        sql = sql .. '`' .. k .. '` = ' .. v .. ', '
+        table.insert( bits, '`' .. k .. '` = ' .. v )
     end
-    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
+    sql = sql .. table.concat( bits, ', ' )
 
     --wheres
     sql = sql .. self:wheresToSql( wheres )
-
     return self:query( sql )
 end
 
 --run a insert request
-function database:insert( table, fields, values, replace, delayed )
+function database:insert( table_name, fields, values, replace, delayed )
     local sql, value
     local cmd = 'INSERT'
     if replace then cmd = 'REPLACE' end
@@ -198,41 +196,32 @@ function database:insert( table, fields, values, replace, delayed )
     values = self:escape( values )
 
     --table
-    sql = cmd .. ' INTO ' .. self.config.prefix .. table .. ' '
+    sql = cmd .. ' INTO ' .. self.config.prefix .. table_name .. ' '
     --fields
-    sql = sql .. '( '
-    for k, v in pairs( fields ) do
-        sql = sql .. '`' .. v .. '`, '
-    end
-    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
-    sql = sql .. ' ) VALUES '
+    sql = sql .. '( ' .. table.concat( fields, ', ' ) .. ' ) VALUES '
     --values
+    local bits = {}
     for k, v in pairs( values ) do
-        value = '( '
-        for c, d in pairs( v ) do
-            value = value .. d .. ', '
-        end
-        value = self.utils.trimRight( value, ', ' ) --clear last ,
-        sql = sql .. value .. ' ), '
+        table.insert( bits, '( ' .. table.concat( v, ', ' ) .. ' )' )
     end
-    sql = self.utils.trimRight( sql, ', ' ) --clear last ,
+    sql = sql .. table.concat( bits, ', ' )
 
     return self:query( sql )
 end
 --insert/replace request
-function database:replace( table, fields, values )
-    return self:insert( table, fields, values, true )
+function database:replace( table_name, fields, values )
+    return self:insert( table_name, fields, values, true )
 end
 --insert delayed request
-function database:delayed( table, fields, values )
-    return self:insert( table, fields, values, false, true )
+function database:delayed( table_name, fields, values )
+    return self:insert( table_name, fields, values, false, true )
 end
 
 --run a search request
-function database:search( table, search_fields, fetch_fields, query )
+function database:search( table_name, search_fields, fetch_fields, query )
     local sql
 
-    sql = 'SELECT (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) AS score, ' .. fetch_fields .. ' FROM ' .. self.config.prefix .. table .. '\n'
+    sql = 'SELECT (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) AS score, ' .. fetch_fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
     sql = sql .. 'WHERE (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) > 0'
 
     return self:query( sql )
