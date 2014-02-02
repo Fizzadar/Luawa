@@ -11,7 +11,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.2',
+    version = '0.9.3-unreleased',
     config_file = 'config',
     modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
     response = '<!--the first request is always special-->',
@@ -164,7 +164,9 @@ function luawa:processFile( file )
     --cache should only be off in dev-mode
     if not self.cache then
         func = function()
-            return loadfile( '/' .. self.root_dir .. file .. '.lua' )()
+            local file, err = loadfile( '/' .. self.root_dir .. file .. '.lua' )
+            if not file then return self:error( 500, err ) end
+            return file()
         end
 
     --cache/production
