@@ -60,6 +60,9 @@
 			display: none;
 			box-sizing: border-box;
 			color: black;
+            font-family: Arial;
+            font-size: 14px;
+            line-height: 24px;
 		}
 			div#luawa_debug img {
 				position: fixed;
@@ -68,6 +71,24 @@
                 width: 100px;
 				z-index: 99;
 			}
+
+
+        div#luawa_debug table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+            div#luawa_debug table th {
+                text-align: left;
+                background: #D7D7D7;
+                padding: 5px;
+            }
+            div#luawa_debug table td {
+                padding: 5px;
+            }
+            div#luawa_debug table tr:hover {
+                background: #F7F7F7;
+            }
 
         #luawa_debug_resizer {
             cursor: pointer;
@@ -110,6 +131,7 @@
 			}
 				.luawa_block h4 a {
 					float: right;
+                    box-sizing: border-box;
 					border: none;
 					background: #F1F1F1;
 					border: 1px solid #D7D7D7;
@@ -117,8 +139,9 @@
 					margin-top: -5px;
 					margin-right: -5px;
 					padding-top: 5px;
-					padding: 5px 15px 5px 10px;
-					height: 34px;
+					padding: 5px 15px 29px 10px;
+					height: 24px;
+                    position: relative;
 					cursor: pointer;
 				}
 				.luawa_block h4 a:hover {
@@ -146,7 +169,7 @@
 
 		div#luawa_request_data {
 			right: 0;
-			background: #FFFECC;
+			background: #FFF;
 			border-left: 1px solid #D7D7D7;
 		}
 
