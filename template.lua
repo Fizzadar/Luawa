@@ -1,8 +1,14 @@
 -- File: template.lua
 -- Desc: lhtml templating
 
+local tostring = tostring
+local pcall = pcall
+local loadstring = loadstring
+local type = type
+local table = table
+local io = io
+local ngx = ngx
 local json = require( 'cjson.safe' )
-local ngx, tostring, pcall, loadstring, io, table, type = ngx, tostring, pcall, loadstring, io, table, type
 
 local template = {
     config = {
