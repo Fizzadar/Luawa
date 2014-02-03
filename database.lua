@@ -17,6 +17,8 @@ local database = {
 function database:_start()
     --utils
     self.utils = luawa.utils
+    --sometimes when caching below nil assignment fails?
+    self.db = nil
 end
 
 --end
@@ -54,7 +56,7 @@ function database:connect()
     if not db then return false, 'failed to start driver: ' .. err end
 
     --connection
-    local ok, err = db:connect( {
+    local ok, err = db:connect({
         host = self.config.host,
         port = self.config.port,
         user = self.config.user,
@@ -101,7 +103,12 @@ function database:wheresToSql( wheres )
         wheres = self:escape( wheres )
         --loop them
         for k, v in pairs( wheres ) do
-            if type( v ) == 'table' then
+            if v.sign and v[1] then
+                v.sign = self.utils.trim( v.sign, '%\'' )
+                table.insert( where_bits, '`' .. k .. '` ' .. v.sign .. ' ' .. v[1] .. '\n' )
+            elseif type( v ) ~= 'table' then
+                table.insert( where_bits, '`' .. k .. '` = ' .. v .. '\n' )
+            else
                 local bits, string = {}, '('
                 for c, d in ipairs( v ) do
                     table.insert( bits, '`' .. k .. '` = ' .. d )
@@ -112,8 +119,6 @@ function database:wheresToSql( wheres )
                 end
                 string = string .. table.concat( bits, ' OR ' ) .. ')\n'
                 table.insert( where_bits, string )
-            else
-                table.insert( where_bits, '`' .. k .. '` = ' .. v .. '\n' )
             end
         end
     end
@@ -126,7 +131,8 @@ function database:wheresToSql( wheres )
 end
 
 --run a select request (build query + run)
-function database:select( table_name, fields, wheres, order, limit, offset, group )
+function database:select( table_name, fields, wheres, options )
+    options = options or {}
     local sql
 
     --table & fields
@@ -136,13 +142,13 @@ function database:select( table_name, fields, wheres, order, limit, offset, grou
     sql = sql .. self:wheresToSql( wheres )
 
     --group
-    if group then sql = sql .. ' GROUP BY ' .. group end
+    if options.group then sql = sql .. ' GROUP BY ' .. options.group end
     --order
-    if order then sql = sql .. ' ORDER BY ' .. order end
+    if options.order then sql = sql .. ' ORDER BY ' .. options.order end
     --limit
-    if limit then sql = sql .. ' LIMIT ' .. limit end
+    if options.limit then sql = sql .. ' LIMIT ' .. options.limit end
     --offset
-    if offset then sql = sql .. ' OFFSET ' .. offset end
+    if options.offset then sql = sql .. ' OFFSET ' .. options.offset end
 
     return self:query( sql )
 end
@@ -186,11 +192,12 @@ function database:update( table_name, values, wheres )
 end
 
 --run a insert request
-function database:insert( table_name, fields, values, replace, delayed )
+function database:insert( table_name, fields, values, options )
+    options = options or {}
     local sql, value
     local cmd = 'INSERT'
-    if replace then cmd = 'REPLACE' end
-    if delayed then cmd = 'INSERT DELAYED' end
+    if options.replace then cmd = 'REPLACE' end
+    if options.delayed then cmd = 'INSERT DELAYED' end
 
     --escape input values
     values = self:escape( values )
@@ -208,14 +215,6 @@ function database:insert( table_name, fields, values, replace, delayed )
 
     return self:query( sql )
 end
---insert/replace request
-function database:replace( table_name, fields, values )
-    return self:insert( table_name, fields, values, true )
-end
---insert delayed request
-function database:delayed( table_name, fields, values )
-    return self:insert( table_name, fields, values, false, true )
-end
 
 --run a search request
 function database:search( table_name, search_fields, fetch_fields, query )
@@ -230,12 +229,3 @@ end
 
 
 return database
-
-
---[[
-    possible feature later:
-    implement memcache on top of db
-    sync upon luawa start, gets all db records into memcache servers
-    from then on all updates/deletes/inserts will edit both db and database
-    select & search will only ever use memcache
-]]
