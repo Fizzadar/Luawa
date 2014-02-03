@@ -196,17 +196,20 @@ function utils.isUrl( str )
 end
 
 -- Trim string
-function utils.trim( str )
-    return str:match( '^%s*(.-)%s*$' )
+function utils.trim( str, chars )
+    if not chars then chars = '%s' end
+    return str:match( '^[' .. chars .. ']*(.-)[' .. chars .. ']*$' )
 end
 
 -- Trim right string (remove chars from right end)
 function utils.trimRight( str, chars )
+    if not chars then chars = '%s' end
     return str:match( '^(.-)[' .. chars .. ']*$' )
 end
 
 -- Trim left string (remove chars from left end)
 function utils.trimLeft( str, chars )
+    if not chars then chars = '%s' end
     return str:match( '^[' .. chars .. ']*(.-)$' )
 end
 
