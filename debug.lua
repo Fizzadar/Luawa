@@ -86,7 +86,6 @@ end
 
 --end special end not _end
 function debug:__end()
-
     --include debug?
     if self.config.enabled then
         lua_debug.sethook()
@@ -107,23 +106,22 @@ function debug:__end()
         end
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
 
-
         --add logs, then template data, then stack
         template:set( 'debug_data', luawa.utils.tableCopy( template.data ) )
-        template:set( 'debug_logs', self.logs )
-        template:set( 'debug_stack', stack )
-        template:set( 'debug_total_time', total_time )
-        template:set( 'debug_luawa_time', luawa_time )
+        template:set( 'debug_logs', self.logs, true )
+        template:set( 'debug_stack', stack, true )
+        template:set( 'debug_total_time', total_time, true )
+        template:set( 'debug_luawa_time', luawa_time, true )
 
         --versions
         local a, b, v1, v2, v3 = tostring( ngx.config.nginx_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
         v1 = v1:len() > 0 and v1 or 0
         v2 = v2:len() > 0 and v2 or 0
-        template:set( 'nginx_version', v1 .. '.' .. v2 .. '.' .. v3 )
+        template:set( 'nginx_version', v1 .. '.' .. v2 .. '.' .. v3, true )
         local a, b, v1, v2, v3 = tostring( ngx.config.ngx_lua_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
         v1 = v1:len() > 0 and v1 or 0
         v2 = v2:len() > 0 and v2 or 0
-        template:set( 'nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3 )
+        template:set( 'nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3, true )
 
         --load debug template
         template.config.dir = 'luawa/'
