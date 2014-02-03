@@ -52,7 +52,7 @@
 			left: 0;
 			left: 0;
             top: 60%;
-			overflow: auto;
+			overflow: hidden;
 			background: #F7F7F7;
 			border-top: 1px solid #D7D7D7;
 			position: fixed;
@@ -152,11 +152,15 @@
 					color: #333;
 				}
 			.luawa_block .luawa_sublock {
-				height: 90%;
-                padding-bottom: 20px;
+				top: 35px;
+                bottom: 0;
+                position: absolute;
 				overflow-x: hidden;
 				overflow-y: auto;
 			}
+            .luawa_top .luawa_sublock {
+                bottom: 25px;
+            }
 
 		div#luawa_app_data {
 			left: 0;
