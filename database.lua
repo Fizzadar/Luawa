@@ -136,6 +136,7 @@ function database:select( table_name, fields, wheres, options )
     local sql
 
     --table & fields
+    local fields = type( fields ) == 'table' and '`' .. table.concat( fields, '`, `' ) .. '`' or '*'
     sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
 
     --wheres
@@ -205,7 +206,7 @@ function database:insert( table_name, fields, values, options )
     --table
     sql = cmd .. ' INTO ' .. self.config.prefix .. table_name .. ' '
     --fields
-    sql = sql .. '( ' .. table.concat( fields, ', ' ) .. ' ) VALUES '
+    sql = sql .. '( `' .. table.concat( fields, '`, `' ) .. '` ) VALUES '
     --values
     local bits = {}
     for k, v in pairs( values ) do
