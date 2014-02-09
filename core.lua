@@ -12,11 +12,34 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    init = false,
     version = '0.9.3-unreleased',
-    modules = { 'user', 'template', 'database', 'utils', 'header', 'session', 'debug' }, --all our modules
+    --base status
     response = '<!--the first request is always special-->',
-    requests = 0
+    requests = 0,
+    init = false,
+    --all our modules
+    modules = {
+        'database',
+        'debug',
+        'header',
+        'session',
+        'template',
+        'user',
+        'utils'
+    },
+    --modules with _start functions
+    module_starts = {
+        'database',
+        'debug',
+        'session'
+    },
+    --modules with _end functions
+    module_ends = {
+        'database',
+        'header',
+        'template',
+        'user'
+    }
 }
 
 -- Set the config
@@ -142,8 +165,8 @@ end
 -- Process a request from the server
 function luawa:processRequest()
     --start modules
-    for k, v in pairs( self.modules ) do
-        if self[v]._start then self[v]:_start() end
+    for k, v in pairs( self.module_starts ) do
+        self[v]:_start()
     end
 
     --now token is generated, add to template (not API)
@@ -156,8 +179,8 @@ function luawa:processRequest()
     self.debug:__end()
 
     --end modules
-    for k, v in pairs( self.modules ) do
-        if self[v]._end then self[v]:_end() end
+    for k, v in pairs( self.module_ends ) do
+        self[v]:_end()
     end
 
     --finally send response content & remove it
