@@ -36,9 +36,6 @@ local debug = {
 
 -- Request start
 function debug:_start()
-    self.stack = {}
-    self.time = gettimeofday()
-
     --reset the logs
     self.logs = {
         messages = {},
@@ -48,7 +45,13 @@ function debug:_start()
     }
 
     if self.config.enabled then
+        self.stack = {}
+        self.time = gettimeofday()
+
         lua_debug.sethook( function( event, line )
+            local time = gettimeofday()
+            local time_diff = ( time - self.time ) / 1000
+            
             local info = lua_debug.getinfo( 2 )
 
             local a, b, path = info.source:find( '^@%/([^%s]+)$' )
@@ -58,10 +61,6 @@ function debug:_start()
                 local a, b, func_name = info.source:find( '^local function _([%w_]+)' )
                 path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
             end
-
-            local time = gettimeofday()
-            local time_diff = ( time - self.time ) / 1000
-            self.time = time
 
             if self.stack[path] then
                 self.stack[path].lines = self.stack[path].lines + 1
@@ -82,6 +81,8 @@ function debug:_start()
                     funcs = funcs
                 }
             end
+
+            self.time = gettimeofday()
         end, 'l' )
     end
 end
