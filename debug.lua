@@ -1,3 +1,4 @@
+-- Luawa
 -- File: debug.lua
 -- Desc: helps debug & profile Luawa apps
 
@@ -33,6 +34,7 @@ local debug = {
     }
 }
 
+-- Request start
 function debug:_start()
     self.stack = {}
     self.time = gettimeofday()
@@ -84,7 +86,7 @@ function debug:_start()
     end
 end
 
---end special end not _end
+-- Special request end after normal _end's
 function debug:__end()
     --include debug?
     if self.config.enabled then
@@ -124,34 +126,36 @@ function debug:__end()
         template:set( 'nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3, true )
 
         --load debug template
+        local old_dir, old_minimize = template.config.dir, template.config.minimize
         template.config.dir = 'luawa/'
         template.config.minimize = false
         template:load( 'debug' )
+        template.config.dir, template.config.minimize = old_dir, old_minimize
     end
 end
 
---basic debug message
+-- Basic debug message
 function debug:message( message )
     if self.config.enabled then
         table.insert( self.logs.messages, { text = message } )
     end
 end
 
---basic error message
+-- Basic error message
 function debug:error( message )
     if self.config.enabled then
         table.insert( self.logs.errors, { text = message, stack = lua_debug.traceback() } )
     end
 end
 
---query message
+-- Query message
 function debug:query( message )
     if self.config.enabled then
         table.insert( self.logs.queries, { text = message } )
     end
 end
 
---access message
+-- Access message
 function debug:access( message, request )
     if type( request ) == 'table' then
         message = message .. 'URL: ' .. request.hostname .. request.path .. ' / IP: ' .. request.user_ip .. ' / UserAgent: ' .. tostring( request.user_agent )
@@ -161,7 +165,6 @@ function debug:access( message, request )
         table.insert( self.logs.messages, { text = message } )
     end
 end
-
 
 
 return debug

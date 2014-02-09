@@ -1,3 +1,4 @@
+-- Luawa
 -- File: user.lua
 -- Desc: deals with user logins, permissions & groups
 
@@ -17,12 +18,14 @@ local user = {
 	}
 }
 
---start
-function user:_start()
-	self.db, self.head, self.utils, self.email = luawa.database, luawa.header, luawa.utils, luawa.email
+-- Init
+function user:_init()
+	self.db = luawa.database
+	self.head = luawa.header
+	self.utils = luawa.utils
 end
 
---end
+-- Request end
 function user:_end()
 	self.user = nil
 end
@@ -50,7 +53,7 @@ end
 function user:resetPassword( email )
 	--get user in question
 	local user = self.db:select(
-		self.config.dbprefix .. 'user', '*',
+		self.config.dbprefix .. 'user', true,
 		{ email = email }
 	)
 	if not ( user and user[1] ) then
@@ -79,7 +82,7 @@ end
 function user:resetPasswordLogin( email, key )
 	--check key+email
 	local user = self.db:select(
-		self.config.dbprefix .. 'user', '*',
+		self.config.dbprefix .. 'user', true,
 		{ email = email, password_reset_key = key }
 	)
 	if not ( user and user[1] ) or user[1].password_reset_time < os.time() then

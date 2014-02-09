@@ -1,3 +1,4 @@
+-- Luawa
 -- File: database.lua
 -- Desc: connects to the database!
 
@@ -13,15 +14,19 @@ local database = {
     }
 }
 
---initialization
-function database:_start()
+-- Init
+function database:_init()
     --utils
     self.utils = luawa.utils
+end
+
+-- Request start
+function database:_start()
     --sometimes when caching below nil assignment fails?
     self.db = nil
 end
 
---end
+-- Request end
 function database:_end()
     --prevent 'Mysql error: failed to send query: closed' when caching
     if self.db then
@@ -30,7 +35,7 @@ function database:_end()
     end
 end
 
---clean table data (wheres or values) <= only things with user input
+-- Clean table data (wheres or values) <= only things with user input
 function database:escape( data )
     if not self:connect() or type( data ) ~= 'table' then return {} end
 
@@ -46,7 +51,7 @@ function database:escape( data )
     return clean_data
 end
 
---connect to the database
+-- Connect to the database
 function database:connect()
     --already connected?
     if self.db then return true end
@@ -71,7 +76,7 @@ function database:connect()
     return true
 end
 
---run a manual/raw query
+-- Run a manual/raw query
 function database:query( sql )
     --check we're connected already
     if not self.db then
@@ -95,6 +100,7 @@ function database:query( sql )
     return data
 end
 
+-- Turn table into WHERE's statement
 function database:wheresToSql( wheres )
     local where_bits = {}
 
@@ -130,7 +136,7 @@ function database:wheresToSql( wheres )
     return ''
 end
 
---run a select request (build query + run)
+-- Run a select request (build query + run)
 function database:select( table_name, fields, wheres, options )
     options = options or {}
     local sql
@@ -154,7 +160,7 @@ function database:select( table_name, fields, wheres, options )
     return self:query( sql )
 end
 
---run a delete request
+-- Run a delete request
 function database:delete( table_name, wheres, limit )
     local sql
 
@@ -170,7 +176,7 @@ function database:delete( table_name, wheres, limit )
     return self:query( sql )
 end
 
---run a update request
+-- Run a update request
 function database:update( table_name, values, wheres )
     local sql
 
@@ -192,7 +198,7 @@ function database:update( table_name, values, wheres )
     return self:query( sql )
 end
 
---run a insert request
+-- Run a insert request
 function database:insert( table_name, fields, values, options )
     options = options or {}
     local sql, value
@@ -217,7 +223,7 @@ function database:insert( table_name, fields, values, options )
     return self:query( sql )
 end
 
---run a search request
+-- Run a search request
 function database:search( table_name, search_fields, fetch_fields, query )
     local sql
 
@@ -226,7 +232,6 @@ function database:search( table_name, search_fields, fetch_fields, query )
 
     return self:query( sql )
 end
-
 
 
 return database

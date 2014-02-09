@@ -1,3 +1,4 @@
+-- Luawa
 -- File: core.lua
 -- Desc: Luawa definition
 
@@ -11,15 +12,17 @@ local io = io
 local ngx = ngx
 
 local luawa = {
+    init = false,
     version = '0.9.3-unreleased',
-    config_file = 'config',
-    modules = { 'user', 'template', 'database', 'utils', 'header', 'email', 'session', 'debug' }, --all our modules
+    modules = { 'user', 'template', 'database', 'utils', 'header', 'session', 'debug' }, --all our modules
     response = '<!--the first request is always special-->',
     requests = 0
 }
 
---set the config
+-- Set the config
 function luawa:setConfig( dir, file )
+    if self.init then return end
+
     self.root_dir = dir or ''
     self.config_file = file or 'config'
 
@@ -58,10 +61,16 @@ function luawa:setConfig( dir, file )
         end
     end
 
+    --module inits
+    for k, v in pairs( self.modules ) do
+        if self[v]._init then self[v]:_init() end
+    end
+
+    self.init = true
     return true
 end
 
---run luawa
+-- Run luawa
 function luawa:run()
     --setup fail?
     if not luawa:prepareRequest() then
@@ -71,7 +80,7 @@ function luawa:run()
     return self:processRequest()
 end
 
---prepare a request
+-- Prepare a request
 function luawa:prepareRequest()
     --start request
     local request = {
@@ -130,15 +139,15 @@ function luawa:prepareRequest()
     return true
 end
 
---process a request from the server
+-- Process a request from the server
 function luawa:processRequest()
     --start modules
     for k, v in pairs( self.modules ) do
         if self[v]._start then self[v]:_start() end
     end
 
-    --template module first (special start) - gets token from session
-    self.template:__start()
+    --now token is generated, add to template (not API)
+    self.template:set( 'token', self.session:getToken() )
 
     --process the file
     local result = self:processFile( self.request.file )
@@ -157,7 +166,7 @@ function luawa:processRequest()
     self.requests = self.requests + 1
 end
 
---process a file
+-- Process a file
 function luawa:processFile( file )
     local func
 
@@ -226,17 +235,22 @@ function luawa:processFile( file )
     return true
 end
 
---display an error page
+-- Display an error page
 function luawa:error( type, message )
     self.debug:error( 'Status: ' .. type .. ' / message: ' .. tostring( message ) )
 
     --hacky
+    local old_dir, old_minimize = self.template.config.dir, self.template.config.minimize
     self.response = ''
     self.template.config.dir = 'luawa/'
     self.template.config.minimize = false
     self.template:load( 'error' )
 
     if self.debug.config.enabled then self.debug:__end() end
+
+    --restore template config
+    --horribly hacky
+    self.template.config.dir, self.template.config.minimize = old_dir, old_minimize
 
     --dump response
     ngx.say( self.response )
@@ -247,7 +261,7 @@ function luawa:error( type, message )
     return false
 end
 
---exit (for debug)
+-- Exit (for debug)
 function luawa:exit( object )
     ngx.say( 'Luawa ' .. self.version .. ' dev:' )
     ngx.say( '<pre>' .. self.utils.tableString( object ) .. '</pre>' )
@@ -260,5 +274,5 @@ function luawa:exit( object )
     ngx.exit( ngx.HTTP_OK )
 end
 
---return
+
 return luawa

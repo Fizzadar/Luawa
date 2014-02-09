@@ -1,3 +1,4 @@
+-- Luawa
 -- File: header.lua
 -- Desc: deals with HTTP headers & cookies
 
@@ -9,18 +10,18 @@ local header = {
     cookies = {}
 }
 
---start
-function header:_start()
+-- Init
+function header:_init()
     self.session = luawa.session
 end
 
---end, send cookie headers, forget them
+-- Request end, send cookie headers, forget them
 function header:_end()
     ngx.header['Set-Cookie'] = self.cookies
     self.cookies = {}
 end
 
---redirect
+-- Redirect
 function header:redirect( url, message_type, message_text )
     if message_type and message_text then
         self.session:addMessage( message_type, message_text )
@@ -35,17 +36,17 @@ function header:redirect( url, message_type, message_text )
     return ngx.redirect( url )
 end
 
---set a response header
+-- Set a response header
 function header:setHeader( key, value )
     ngx.header[key] = value
 end
 
---get a request header
+-- Get a request header
 function header:getHeader( key )
     return luawa.request.headers[key] or false
 end
 
---set a response cookie
+-- Set a response cookie
 function header:setCookie( key, value, expire, path, domain, secure, httponly )
     if not path then path = '/' end
     if not expire then expire = 3600 end
@@ -65,16 +66,15 @@ function header:setCookie( key, value, expire, path, domain, secure, httponly )
     luawa.request.cookie[key] = value
 end
 
---get a request cookie
+-- Get a request cookie
 function header:getCookie( key )
     return luawa.request.cookie[key] or false
 end
 
---delete a cookie (set it to expire 60m ago)
+-- Delete a cookie (set it to expire 60m ago)
 function header:deleteCookie( key )
     self:setCookie( key, '', -3600, '/' )
 end
 
 
---return header
 return header

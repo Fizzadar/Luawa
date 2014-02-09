@@ -1,3 +1,4 @@
+-- Luawa
 -- File: session.lua
 -- Desc: deals with session management (memory-based, shared between ngx workers)
 
@@ -9,10 +10,14 @@ local session = {
     }
 }
 
---start
-function session:_start()
-    self.header, self.utils = luawa.header, luawa.utils
+-- Init
+function session:_init()
+    self.header = luawa.header
+    self.utils = luawa.utils
+end
 
+-- Request start
+function session:_start()
     --get session id, or set
     self.id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
 
@@ -45,7 +50,7 @@ end
 --get session data
 function session:get( key )
     --get + decode
-    local data, err = json.decode( ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ) )
+    local data, err = json.decode( ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ))
     --return data.key or data
     if not key then return data else return data[key] end
 end

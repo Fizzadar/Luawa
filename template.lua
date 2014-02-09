@@ -1,3 +1,4 @@
+-- Luawa
 -- File: template.lua
 -- Desc: lhtml templating
 
@@ -12,18 +13,18 @@ local json = require( 'cjson.safe' )
 
 local template = {
     config = {
-        dir = 'app/template/'
+        dir = ''
     },
     data = {}
 }
 
---special start
-function template:__start()
-    --add token for forms/etc (if regenerated session adds it for us)
-    self:set( 'token', luawa.session:getToken() )
+-- Init
+function template:_init()
+    self.utils = luawa.utils
+    self.session = luawa.session
 end
 
---end function
+-- End function
 function template:_end()
     --if api request output template data as json
     if self.api then
@@ -165,7 +166,7 @@ function template:toString( string )
     --nil returns blank
     if string == nil then return '' end
     --string as string
-    if type( string ) == 'string' then return string end
+    if type( string ) == 'string' then return self.utils.htmlEnts( string ) end
     --otherwise as best
     return tostring( string )
 end
