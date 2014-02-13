@@ -102,18 +102,13 @@
             margin: 0;
             padding-top: 30px;
             z-index: 97;
+            height: 100%;
         }
         .luawa_twothird {
             width: 64%;
         }
         .luawa_third {
             width: 36%;
-        }
-        .luawa_top {
-            height: 45%;
-        }
-        .luawa_bottom {
-            height: 55%;
         }
             .luawa_block div {
                 float: left;
@@ -168,7 +163,7 @@
             background: #FFF;
             word-wrap: break-word;
         }
-        div.luawa_data {
+        div.luawa_data, div.luawa_messages, div.luawa_status {
             display: none;
         }
 
@@ -178,24 +173,29 @@
             border-left: 1px solid #D7D7D7;
         }
 
-        div#luawa_stack_data {
+        div.luawa_stack {
             bottom: 0;
-            background: #333;
-            color: #FFF;
         }
-            div#luawa_stack_data h4 {
+            div.luawa_stack h4 {
                 color: black;
             }
-                div#luawa_stack_data table th {
-                    background: #000;
+                div.luawa_stack table th {
+                    background: orange;
                 }
-                div#luawa_stack_data table tr:hover td {
+                div.luawa_stack table tr td {
                     background: rgb( 0, 0, 117 );
+                    color: white;
+                    border-top: 3px solid black;
                 }
-                div#luawa_stack_data table tr.luawa_small td {
+                div.luawa_stack table tr.luawa_small td {
                     font-size: 13px;
                     padding: 1px 5px;
-                    background: #555;
+                    background: #FFFECC;
+                    color: black;
+                    border: none;
+                }
+                div.luawa_stack table tr.luawa_small td:first-child {
+                    text-indent: 15px;
                 }
 
         div#luawa_internal_data {
@@ -212,32 +212,70 @@
         <h4>
             Serverside Messages
             <a id="luawa_show_data" data-tab-id="luawa_data">show template data</a>
-            <a id="luawa_show_messages" data-tab-id="luawa_messages" class="active">show messages</a>
+            <a id="luawa_show_messages" data-tab-id="luawa_messages">show messages</a>
+            <a id="luawa_show_stack" data-tab-id="luawa_stack" class="active">show stack/profiler</a>
         </h4>
 
         <div class="luawa_messages luawa_sublock">
-        <? for key, log in pairs( self:get( 'debug_logs' ) ) do ?>
-            <? for k, message in pairs( log ) do ?>
-                <strong><?=key ?></strong>:
-                <pre><?=message.text ?></pre><br />
+            <? for key, log in pairs( self:get( 'debug_logs' ) ) do ?>
+                <? for k, message in pairs( log ) do ?>
+                    <strong><?=key ?></strong>:
+                    <pre><?=message.text ?></pre><br />
+                <? end ?>
             <? end ?>
-        <? end ?>
         </div>
 
         <div class="luawa_data luawa_sublock">
             <pre><?=luawa.utils.tableString( self:get( 'debug_data' ) ) ?></pre>
+        </div>
+
+        <div class="luawa_stack luawa_sublock">
+            <table>
+                <thead><tr>
+                    <th>File</th>
+                    <th>Time</th>
+                    <th>Lines</th>
+                </tr></thead>
+                <tbody>
+                    <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
+                        <tr>
+                            <td><?=v.file ?></td>
+                            <td><?=v.data.time ?>ms</td>
+                            <td><?=v.data.lines ?></td>
+                        </tr>
+                        <? for c, d in pairs( v.data.funcs ) do ?>
+                            <tr class="luawa_small">
+                                <td><?=c ?></td>
+                                <td><?=d.time ?>ms</td>
+                                <td><?=d.lines ?></td>
+                            </tr>
+                        <? end ?>
+                    <? end ?>
+                </tbody >
+            </table>
         </div>
     </div>
 
     <div id="luawa_request_data" class="luawa_block luawa_third luawa_top">
         <h4>
             Request Data
+            <a id="luawa_show_status" data-tab-id="luawa_status">show status</a>
+            <a id="luawa_show_request_data" data-tab-id="luawa_request_data" class="active">show request data</a>
         </h4>
 
         <div class="luawa_request_data luawa_sublock">
             <table>
                 <tbody>
                     <tr>
+                        <td>Total Request Time:</td>
+                        <td><span><?=self:get( 'debug_all_time' ) ?>ms</span></td>
+                    </tr><tr>
+                        <td>App Time:</td>
+                        <td><span><?=self:get( 'debug_app_time' ) ?>ms</span></td>
+                    </tr><tr>
+                        <td>Luawa Time:</td>
+                        <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
+                    </tr><tr>
                         <td>Hostname</td>
                         <td><?=luawa.request.hostname ?></td>
                     </tr><tr>
@@ -285,53 +323,11 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <div id="luawa_stack_data" class="luawa_block luawa_twothird luawa_bottom">
-        <h4>
-            Stack Calls
-        </h4>
-
-        <div class="luawa_sublock">
-            <table>
-                <thead><tr>
-                    <th>File</th>
-                    <th>Time</th>
-                    <th>Lines</th>
-                </tr></thead>
-                <tbody>
-                    <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
-                        <tr>
-                            <td><?=v.file ?></td>
-                            <td><?=v.data.time ?>ms</td>
-                            <td><?=v.data.lines ?></td>
-                        </tr>
-                        <? for c, d in pairs( v.data.funcs ) do ?>
-                            <tr class="luawa_small">
-                                <td><?=c ?></td>
-                                <td><?=d.time ?>ms</td>
-                                <td><?=d.lines ?></td>
-                            </tr>
-                        <? end ?>
-                    <? end ?>
-                </tbody >
-            </table>
-        </div>
-    </div>
-
-    <div id="luawa_internal_data" class="luawa_block luawa_third luawa_bottom">
-        <h4>Luawa/Nginx Status</h4>
-
-        <div class="nginx_status luawa_sublock">
+        <div class="luawa_status luawa_sublock">
             <table>
                 <tbody>
                     <tr>
-                        <td>Total Request Time:</td>
-                        <td><span><?=self:get( 'debug_total_time' ) ?>ms</span></td>
-                    </tr><tr>
-                        <td>Luawa Time:</td>
-                        <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
-                    </tr><tr>
                         <td>Luawa Version:</td>
                         <td><span><?=luawa.version ?></span></td>
                     </tr><tr>
@@ -456,14 +452,13 @@
 
 
         //app data
-        var app_data = document.querySelector( '#luawa_app_data' ),
-            app_data_buttons = document.querySelectorAll( '#luawa_app_data h4 a' );
+        var app_data_buttons = document.querySelectorAll( '#luawa_debug h4 a' );
 
         //button clicks
         for( var i=0; i<app_data_buttons.length; i++ ) {
             app_data_buttons[i].addEventListener( 'click', function( e ) {
                 e.preventDefault();
-                var buttons = app_data_buttons;
+                var buttons = this.parentNode.querySelectorAll( 'a' );
                 for( var i =0; i<buttons.length; i++ ) {
                     buttons[i].className = '';
                 }
