@@ -242,8 +242,8 @@ function utils.jsonEncode( object )
 end
 
 -- JSON decode
-function utils.jsonDecode( json )
-    return json.decode( json )
+function utils.jsonDecode( str )
+    return json.decode( str )
 end
 
 -- Explode, credit: http://richard.warburton.it
