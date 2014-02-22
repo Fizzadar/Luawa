@@ -139,10 +139,11 @@ end
 -- Run a select request (build query + run)
 function database:select( table_name, fields, wheres, options )
     options = options or {}
+    options.select = options.select and ', ' .. options.select or ''
     local sql
 
     --table & fields
-    local fields = type( fields ) == 'table' and '`' .. table.concat( fields, '`, `' ) .. '`' or '*'
+    local fields = type( fields ) == 'table' and '`' .. table.concat( fields, '`, `' ) .. '`' .. options.select or '*'
     sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
 
     --wheres
