@@ -267,14 +267,17 @@
             <table>
                 <tbody>
                     <tr>
-                        <td>Total Request Time:</td>
-                        <td><span><?=self:get( 'debug_all_time' ) ?>ms</span></td>
+                        <td>Request Time:<br /><small>(app + luawa)</small></td>
+                        <td><span><?=self:get( 'debug_request_time' ) ?>ms</span></td>
                     </tr><tr>
                         <td>App Time:</td>
                         <td><span><?=self:get( 'debug_app_time' ) ?>ms</span></td>
                     </tr><tr>
                         <td>Luawa Time:</td>
                         <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
+                    </tr><tr>
+                        <td>Debug Time:</td>
+                        <td><span><?=self:get( 'debug_debug_time' ) ?>ms</span></td>
                     </tr><tr>
                         <td>Hostname</td>
                         <td><?=luawa.request.hostname ?></td>
@@ -340,13 +343,16 @@
                         <td>Luawa Root:</td>
                         <td><span><?=luawa.root_dir ?></span></td>
                     </tr><tr>
-                        <td>Requests Served:</td>
-                        <td><span><?=luawa.requests ?></span></td>
-                    </tr><tr>
                         <td>Cache:</td>
                         <td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
                     </tr><tr>
                         <th colspan="2">Session Objects</th>
+                    </tr><tr>
+                        <td>Requests Served:</td>
+                        <td><span><?=luawa.requests:get( 'success' ) ?></span></td>
+                    </tr><tr>
+                        <td>Errors Served:</td>
+                        <td><span><?=luawa.requests:get( 'error' ) ?></span></td>
                     </tr><tr>
                         <td>Session</td>
                         <td><?=#ngx.shared[luawa.shm_prefix .. 'session']:get_keys( 0 ) ?></td>
@@ -464,13 +470,28 @@
                 }
                 this.className = 'active';
 
-                var tabs = this.parentNode.parentNode.querySelectorAll( '.luawa_sublock' );
+                var sub_block = this.parentNode.parentNode;
+                var tabs = sub_block.querySelectorAll( '.luawa_sublock' );
                 for( var i=0; i<tabs.length; i++ ) {
                     tabs[i].style.display = 'none';
                 }
                 var tab = document.querySelector( '.' + this.getAttribute( 'data-tab-id' ) );
                 tab.style.display = 'block';
+
+                var open_tabs = JSON.parse( sessionStorage.getItem( 'luawa_tabs' )) || {};
+                if( typeof open_tabs != 'object' ) open_tabs = {};
+                open_tabs[sub_block.id] = this.getAttribute( 'data-tab-id' );
+                sessionStorage.setItem( 'luawa_tabs', JSON.stringify( open_tabs ));
             });
+        }
+
+        //remember open tabs
+        var tabs = JSON.parse( sessionStorage.getItem( 'luawa_tabs' )) || {};
+        if( typeof tabs != 'object' ) tabs = {};
+        for( var key in tabs ) {
+            console.log( key, tabs[key] );
+            var $el = document.querySelector( '#' + key + ' h4 a[data-tab-id=' + tabs[key] + ']' );
+            $el.click();
         }
 
     })();

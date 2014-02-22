@@ -52,7 +52,7 @@ function debug:_start()
         lua_debug.sethook( function( event, line )
             local time = gettimeofday()
             local time_diff = ( time - self.time ) / 1000
-            
+
             local info = lua_debug.getinfo( 2 )
 
             local a, b, path = info.source:find( '^@%/([^%s]+)$' )
@@ -95,9 +95,6 @@ function debug:__end()
         lua_debug.sethook()
         local template = luawa.template
 
-        --work out total request time (including debug stuff)
-        local all_time = ( gettimeofday() - self.start_time ) / 1000
-
         --work out stack
         local stack, app_time, luawa_time = {}, 0, 0
         for file, data in pairs( self.stack ) do
@@ -113,13 +110,18 @@ function debug:__end()
         end
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
 
+        --work out total request time (including most debug stuff)
+        local all_time = ( gettimeofday() - self.start_time ) / 1000
+        local debug_time = all_time - app_time - luawa_time
+
         --add logs, then template data, then stack
         template:set( 'debug_data', luawa.utils.tableCopy( template.data ))
         template:set( 'debug_logs', self.logs )
         template:set( 'debug_stack', stack )
         template:set( 'debug_app_time', app_time, true )
         template:set( 'debug_luawa_time', luawa_time, true )
-        template:set( 'debug_all_time', all_time, true )
+        template:set( 'debug_debug_time', debug_time, true )
+        template:set( 'debug_request_time', app_time + luawa_time, true )
 
         --versions
         local a, b, v1, v2, v3 = tostring( ngx.config.nginx_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
