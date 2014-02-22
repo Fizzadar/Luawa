@@ -15,7 +15,7 @@ local luawa = {
     version = '0.9.3-unreleased',
     --base status
     response = '<!--the first request is always special-->',
-    requests = 0,
+    requests = ngx.shared.requests,
     init = false,
     --all our modules
     modules = {
@@ -66,6 +66,9 @@ function luawa:setConfig( dir, file )
 
     --shared memory prefix
     self.shm_prefix = config.shm_prefix or ''
+    self.requests = ngx.shared[self.shm_prefix .. 'requests']
+    self.requests:set( 'success', 0 )
+    self.requests:set( 'error', 0 )
 
     --cache?
     self.cache = config.cache
@@ -186,7 +189,7 @@ function luawa:processRequest()
     --finally send response content & remove it
     ngx.say( self.response )
     self.response = ''
-    self.requests = self.requests + 1
+    self.requests:incr( 'success', 1 )
 end
 
 -- Process a file
@@ -277,6 +280,8 @@ function luawa:error( type, message )
 
     --dump response
     ngx.say( self.response )
+    self.response = ''
+    self.requests:incr( 'error', 1 )
 
     --exit nginx (stop other output)
     ngx.exit( ngx.HTTP_OK )
