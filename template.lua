@@ -50,9 +50,9 @@ function template:_end()
         else
             luawa.response = json.encode({ error = err })
         end
-        self.api = false
     end
 
+    self.api = false
     self:clear()
 end
 
@@ -90,6 +90,11 @@ function template:clear()
     self.data = {}
 end
 
+-- Set api on/off
+function template:setApi( bool )
+    self.api = bool
+end
+
 -- Add raw code to current output
 function template:put( content )
     if self.api then return end
@@ -98,7 +103,7 @@ function template:put( content )
 end
 
 -- Load a lhtml file, convert code to lua, run and add string to end of response.content
-function template:load( file )
+function template:load( file, inline )
     if self.api then return true end
 
     --attempt to get cache_id
@@ -154,8 +159,12 @@ function template:load( file )
 
     --if ok, add to output
     if status then
-        luawa.response = luawa.response .. err
-        return true
+        if inline then
+            return err
+        else
+            luawa.response = luawa.response .. err
+            return true
+        end
     else
         return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err )
     end
@@ -180,6 +189,8 @@ function template:process( code )
     code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
     code = code:gsub( '<%?=([#{},/_%+\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
+    --replace <??=vars?>
+    code = code:gsub( '<%?%?=([#{},/_%+\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. %1 .. [[' )
     --replace <? to close output, start raw lua
     code = code:gsub( '<%?', ']] ' )
     --replace ?> to stop lua and start output (in table)
