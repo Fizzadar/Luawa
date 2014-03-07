@@ -145,21 +145,21 @@ end
 -- Basic debug message
 function debug:message( message )
     if self.config.enabled then
-        table.insert( self.logs.messages, { text = message } )
+        table.insert( self.logs.messages, { text = message })
     end
 end
 
 -- Basic error message
 function debug:error( message )
     if self.config.enabled then
-        table.insert( self.logs.errors, { text = message, stack = lua_debug.traceback() } )
+        table.insert( self.logs.errors, { text = message, stack = lua_debug.traceback() })
     end
 end
 
 -- Query message
 function debug:query( message )
     if self.config.enabled then
-        table.insert( self.logs.queries, { text = message } )
+        table.insert( self.logs.queries, { text = message })
     end
 end
 
@@ -170,9 +170,8 @@ function debug:access( message, request )
     end
 
     if self.config.enabled then
-        table.insert( self.logs.messages, { text = message } )
+        table.insert( self.logs.messages, { text = message })
     end
 end
-
 
 return debug

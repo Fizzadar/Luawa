@@ -221,6 +221,9 @@
                 <? for k, message in pairs( log ) do ?>
                     <strong><?=key ?></strong>:
                     <pre><?=message.text ?></pre><br />
+                    <? if message.stack then ?>
+                        <pre><?=message.stack ?></pre>
+                    <? end ?>
                 <? end ?>
             <? end ?>
         </div>
@@ -489,7 +492,6 @@
         var tabs = JSON.parse( sessionStorage.getItem( 'luawa_tabs' )) || {};
         if( typeof tabs != 'object' ) tabs = {};
         for( var key in tabs ) {
-            console.log( key, tabs[key] );
             var $el = document.querySelector( '#' + key + ' h4 a[data-tab-id=' + tabs[key] + ']' );
             $el.click();
         }
