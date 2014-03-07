@@ -12,7 +12,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.3-unreleased',
+    version = '0.9.3',
     --base status
     response = '<!--the first request is always special-->',
     requests = ngx.shared.requests,
@@ -96,6 +96,7 @@ function luawa:setConfig( dir, file )
     return true
 end
 
+
 -- Run luawa
 function luawa:run()
     --setup fail?
@@ -105,6 +106,7 @@ function luawa:run()
     --go!
     return self:processRequest()
 end
+
 
 -- Prepare a request
 function luawa:prepareRequest()
@@ -165,6 +167,7 @@ function luawa:prepareRequest()
     return true
 end
 
+
 -- Process a request from the server
 function luawa:processRequest()
     --start modules
@@ -178,19 +181,10 @@ function luawa:processRequest()
     --process the file
     local result = self:processFile( self.request.file )
 
-    --debug module first (special end)
-    self.debug:__end()
-
-    --end modules
-    for k, v in pairs( self.module_ends ) do
-        self[v]:_end()
-    end
-
-    --finally send response content & remove it
-    ngx.say( self.response )
-    self.response = ''
-    self.requests:incr( 'success', 1 )
+    --end the request
+    self:endRequest()
 end
+
 
 -- Process a file
 function luawa:processFile( file )
@@ -256,10 +250,35 @@ function luawa:processFile( file )
         self:error( 500, 'File: ' .. file .. '.lua, error: ' .. err )
     end
 
-
     --done!
     return true
 end
+
+
+-- End the current request
+function luawa:endRequest( error )
+    --debug module first (special end)
+    self.debug:__end()
+
+    --end modules
+    for k, v in pairs( self.module_ends ) do
+        self[v]:_end()
+    end
+
+    --finally send response content & remove it
+    ngx.say( self.response )
+    self.response = ''
+    --internal stat counters
+    if error then
+        self.requests:incr( 'success', 1 )
+    else
+        self.requests:incr( 'error', 1 )
+    end
+
+    --and we're done!
+    ngx.exit( ngx.HTTP_OK )
+end
+
 
 -- Display an error page
 function luawa:error( type, message )
@@ -272,21 +291,12 @@ function luawa:error( type, message )
     self.template.config.minimize = false
     self.template:load( 'error' )
 
-    if self.debug.config.enabled then self.debug:__end() end
-
     --restore template config
     --horribly hacky
     self.template.config.dir, self.template.config.minimize = old_dir, old_minimize
 
-    --dump response
-    ngx.say( self.response )
-    self.response = ''
-    self.requests:incr( 'error', 1 )
-
-    --exit nginx (stop other output)
-    ngx.exit( ngx.HTTP_OK )
-
-    return false
+    --end request & exit
+    self:endRequest()
 end
 
 -- Exit (for debug)
@@ -294,12 +304,8 @@ function luawa:exit( object )
     ngx.say( 'Luawa ' .. self.version .. ' dev:' )
     ngx.say( '<pre>' .. self.utils.tableString( object ) .. '</pre>' )
 
-    if self.debug.config.enabled then
-        self.debug:__end()
-        ngx.say( luawa.response )
-    end
-
-    ngx.exit( ngx.HTTP_OK )
+    --end request & exit
+    self:endRequest()
 end
 
 
