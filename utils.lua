@@ -41,7 +41,7 @@ function utils.tableString( table, level )
             for i = 0, level do
                 k = ' ' .. k
             end
-            str = str .. "\n" .. k .. ' => ' .. tostring( v )
+            str = str .. '\n' .. k .. ' = ' .. tostring( v )
             if type( v ) == 'table' then
                 str = str .. tableString( v, level + 4 )
             end
