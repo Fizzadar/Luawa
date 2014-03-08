@@ -12,7 +12,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.4-unreleased',
+    version = '0.9.4',
     --base status
     requests = ngx.shared.requests,
     init = false,
