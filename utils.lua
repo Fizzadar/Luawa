@@ -236,27 +236,51 @@ function utils.urlEncode( str )
     return ngx.escape_uri( str )
 end
 
+-- JSON Prepare
+function utils.jsonPrepare( object )
+    local function prepare( object )
+        local out, type = {}, type( object )
+        if type == 'table' then
+            for k, v in pairs( object ) do
+                out[k] = prepare( v )
+            end
+        else
+            if type == 'function' then
+                out = tostring( object )
+            else
+                out = object
+            end
+        end
+
+        return out
+    end
+
+    return prepare( object )
+end
+
 -- JSON Encode
 function utils.jsonEncode( object )
-    return json.encode( object )
+    return json.encode( utils.jsonPrepare( object ))
 end
 
 -- JSON decode
 function utils.jsonDecode( str )
-    return json.decode( str )
+    return json.decode( utils.jsonPrepare( str ))
 end
 
 -- Explode, credit: http://richard.warburton.it
 function utils.explode( str, divide )
-  if divide == '' then return false end
-  local pos, arr = 0, {}
-  --for each divider found
-  for st, sp in function() return string.find( str, divide, pos, true ) end do
-    table.insert( arr, string.sub( str, pos, st - 1 ) ) --attach chars left of current divider
-    pos = sp + 1 --jump past current divider
-  end
-  table.insert( arr, string.sub( str, pos ) ) -- Attach chars right of last divider
-  return arr
+    if divide == '' then return false end
+    local pos, arr = 0, {}
+
+    --for each divider found
+    for st, sp in function() return string.find( str, divide, pos, true ) end do
+        table.insert( arr, string.sub( str, pos, st - 1 ) ) --attach chars left of current divider
+        pos = sp + 1 --jump past current divider
+    end
+
+    table.insert( arr, string.sub( str, pos ) ) -- Attach chars right of last divider
+    return arr
 end
 
 --return obj
