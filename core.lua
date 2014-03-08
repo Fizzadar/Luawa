@@ -31,6 +31,7 @@ local luawa = {
     module_starts = {
         'database',
         'debug',
+        'header',
         'session'
     },
     --modules with _end functions
@@ -114,14 +115,10 @@ function luawa:prepareRequest()
     local request = {
         remote_addr = ngx.var.remote_addr,
         method = ngx.req.get_method(),
-        headers = ngx.req.get_headers(),
         get = ngx.req.get_uri_args(),
         post = {},
-        cookie = {},
         tmp = {}
     };
-    --set hostname
-    request.hostname = request.headers.host:gsub( ':[0-9]+', '' ) or self.hostname
 
     --always get first ?request
     if type( request.get.request ) == 'table' then
@@ -147,16 +144,6 @@ function luawa:prepareRequest()
     --set file correctly
     request.args = res.args or {}
     request.file = res.file
-
-    --split/set cookies
-    if request.headers.cookie then
-        for k, v in request.headers.cookie:gmatch( '([^;]+)' ) do
-            local a, b, key, value = k:find( '([^=]+)=([^=]+)')
-            if key and value then
-                request.cookie[luawa.utils.trim( key )] = value
-            end
-        end
-    end
 
     --set function & request
     request.func = request.get.request or 'default'
@@ -256,7 +243,7 @@ end
 
 
 -- End the current request
-function luawa:endRequest( error )
+function luawa:endRequest( error, url )
     --debug module first (special end)
     self.debug:__end()
 
@@ -265,9 +252,6 @@ function luawa:endRequest( error )
         self[v]:_end()
     end
 
-    --finally send response content & remove it
-    ngx.say( self.response )
-    self.response = ''
     --internal stat counters
     if error then
         self.requests:incr( 'success', 1 )
@@ -275,8 +259,23 @@ function luawa:endRequest( error )
         self.requests:incr( 'error', 1 )
     end
 
+    --redirecting?
+    if url then
+        return ngx.redirect( url )
+    end
+
+    --finally send response content & remove it
+    ngx.say( self.response )
+    self.response = ''
+
     --and we're done!
-    ngx.exit( ngx.HTTP_OK )
+    return ngx.exit( ngx.HTTP_OK )
+end
+
+
+-- Shortcut to redirect via endRequest
+function luawa:redirect( url )
+    self:endRequest( false, url )
 end
 
 

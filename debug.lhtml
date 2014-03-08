@@ -293,7 +293,7 @@
                     </tr><tr>
                         <th colspan="2">Headers</th>
                     </tr>
-                    <? for k, v in pairs( luawa.request.headers ) do ?>
+                    <? for k, v in pairs( luawa.header.headers ) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -302,7 +302,7 @@
                     <tr>
                         <th colspan="2">Cookies</th>
                     </tr>
-                    <? for k, v in pairs( luawa.request.cookie ) do ?>
+                    <? for k, v in pairs( luawa.header.cookies ) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>

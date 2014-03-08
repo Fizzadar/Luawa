@@ -7,18 +7,36 @@ local table = table
 local ngx = ngx
 
 local header = {
-    cookies = {}
+    headers = {},
+    cookies = {},
+    new_cookies = {}
 }
 
 -- Init
 function header:_init()
     self.session = luawa.session
+    self.utils = luawa.utils
+end
+
+function header:_start()
+    self.headers = ngx.req.get_headers()
+
+    if self.headers.cookie then
+        for k, v in self.headers.cookie:gmatch( '([^;]+)' ) do
+            local a, b, key, value = k:find( '([^=]+)=([^=]+)')
+            if key and value then
+                self.cookies[self.utils.trim( key )] = value
+            end
+        end
+    end
 end
 
 -- Request end, send cookie headers, forget them
 function header:_end()
-    ngx.header['Set-Cookie'] = self.cookies
+    ngx.header['Set-Cookie'] = self.new_cookies
+    self.new_cookies = {}
     self.cookies = {}
+    self.headers = {}
 end
 
 -- Redirect
@@ -27,23 +45,18 @@ function header:redirect( url, message_type, message_text )
         self.session:addMessage( message_type, message_text )
     end
 
-    --end modules, we're ending here! (close db connections, etc)
-    for k, v in pairs( luawa.modules ) do
-        if luawa[v]._end then luawa[v]:_end() end
-    end
-
     --redirect
-    return ngx.redirect( url )
+    return luawa:redirect( url )
 end
 
 -- Set a response header
 function header:setHeader( key, value )
-    ngx.header[key] = value
+    ngx.req.set_header( key, value )
 end
 
 -- Get a request header
 function header:getHeader( key )
-    return luawa.request.headers[key] or false
+    return ngx.header[key] or false
 end
 
 -- Set a response cookie
@@ -61,14 +74,14 @@ function header:setCookie( key, value, expire, path, domain, secure, httponly )
     if httponly then string = string .. '; HttpOnly' end
 
     --insert into cookies, to be dumped at end
-    table.insert( self.cookies, string )
+    table.insert( self.new_cookies, string )
     --and set internal cookie for any further requests
-    luawa.request.cookie[key] = value
+    self.cookies[key] = value
 end
 
 -- Get a request cookie
 function header:getCookie( key )
-    return luawa.request.cookie[key] or false
+    return self.cookies[key] or false
 end
 
 -- Delete a cookie (set it to expire 60m ago)
