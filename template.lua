@@ -9,13 +9,12 @@ local type = type
 local table = table
 local io = io
 local ngx = ngx
-local json = require( 'cjson.safe' )
 
 local template = {
     config = {
         dir = ''
     },
-    data = {}
+    cache = {}
 }
 
 -- Init
@@ -24,10 +23,18 @@ function template:_init()
     self.session = luawa.session
 end
 
+-- Start function
+function template:_start()
+    ngx.ctx.data = {}
+
+    --now token is generated, add to template (not API)
+    self:set( 'token', self.session:getToken() )
+end
+
 -- End function
 function template:_end()
     --if api request output template data as json
-    if self.api then
+    if ngx.ctx.api then
         local function clean( data )
             if type( data ) == 'table' then
                 for k, v in pairs( data ) do
@@ -44,117 +51,100 @@ function template:_end()
 
         luawa.header:setHeader( 'Content-Type', 'text/json' )
         self:set( 'messages', luawa.session:getMessages(), true )
-        local out, err = json.encode( self.data )
+        local out, err = self.utils.jsonEncode( ngx.ctx.data )
         if out then
-            luawa.response = out
+            ngx.ctx.response = out
         else
-            luawa.response = json.encode({ error = err })
+            ngx.ctx.response = self.utils.jsonEncode({ error = err })
         end
     end
-
-    self.api = false
-    self:clear()
 end
 
 -- Set data
 function template:set( key, value, api )
     --not api or api enabled
     if not self.api or api then
-        self.data[key] = value
+        ngx.ctx.data[key] = value
     end
 end
 
 -- Add data (makes table value must be table)
 function template:add( key, value, api )
     if not self.api or api then
-        if not self.data[key] then
-            self.data[key] = {}
-        elseif type( self.data[key] ) ~= 'table' then
-            self.data[key] = { self.data[key] }
+        if not ngx.ctx.data[key] then
+            ngx.ctx.data[key] = {}
+        elseif type( ngx.ctx.data[key] ) ~= 'table' then
+            ngx.ctx.data[key] = { ngx.ctx.data[key] }
         end
 
         for k, v in pairs( value ) do
-            table.insert( self.data[key], v )
+            table.insert( ngx.ctx.data[key], v )
         end
     end
 end
 
 -- Get data (dump all when no key)
 function template:get( key )
-    if not key then return self.data end
-    return self.data[key]
+    if not key then return ngx.ctx.data end
+    return ngx.ctx.data[key]
 end
 
 -- Clear data
 function template:clear()
-    self.data = {}
+    ngx.ctx.data = {}
 end
 
 -- Set api on/off
 function template:setApi( bool )
-    self.api = bool
+    ngx.ctx.api = bool
 end
 
 -- Add raw code to current output
 function template:put( content )
     if self.api then return end
 
-    luawa.response = luawa.response .. tostring( content )
+    ngx.ctx.response = ngx.ctx.response .. tostring( content )
 end
 
 -- Load a lhtml file, convert code to lua, run and add string to end of response.content
 function template:load( file, inline )
     if self.api then return true end
+    local cache = luawa.cache
 
-    --attempt to get cache_id
-    local cache_id = ngx.shared[luawa.shm_prefix .. 'cache_template']:get( file )
-    local func
-
-    --not cached?
-    if not cache_id then
-        --read app file
-        local f, err = io.open( luawa.root_dir .. self.config.dir .. file .. '.lhtml', 'r' )
-        if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
-        --read the file
-        local string, err = f:read( '*a' )
-        if not string then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
-        --close file
-        f:close()
-
-        local func_name = file:gsub( '/', '_' )
-        --process string lhtml => lua
-        string = self:process( string )
-        --prepend some stuff
-        string = 'local function _' .. func_name .. '()\n' .. string
-        --append
-        string = string .. '\nend return _' .. func_name .. ''
-
-        --generate cache_id
-        cache_id = self.config.dir:gsub( '/', '_' ) .. func_name
-
-        --cache?
-        if luawa.cache then
-            --now let's save this as a file
-            local f, err = io.open( luawa.root_dir .. 'luawa/cache/' .. cache_id .. '.lua', 'w+' )
-            if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: File error: ' .. err ) end
-            --write to file
-            local status = f:write( string )
-            if not status then return luawa:error( 500, 'Template: ' .. file .. ' :: File write error: ' .. err ) end
-            --close file
-            f:close()
-
-            ngx.shared[luawa.shm_prefix .. 'cache_template']:set( file, cache_id )
-        else
-            --compile our string
-            local status, err = loadstring( string )
-            if not status then return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err ) end
-            --compile isn't a function, make it one by calling the compiled string
-            func = status()
-        end
+    --try cache
+    if cache and self.cache[file] then
+        return self:processFunction( self.cache[file], file )
     end
 
-    --require file & call safely
-    func = func or require( luawa.root_dir .. 'luawa/cache/' .. cache_id )
+    --read template file
+    local f, err = io.open( luawa.root_dir .. self.config.dir .. file .. '.lhtml', 'r' )
+    if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
+    --read the file
+    local string, err = f:read( '*a' )
+    if not string then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
+    --close file
+    f:close()
+
+    local func_name = file:gsub( '/', '_' )
+    --process string lhtml => lua
+    string = self:processFile( string )
+
+    --compile our string
+    local func, err = loadstring( string )
+    if not func then return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err ) end
+
+    --save if cache
+    if cache then
+        self.cache[file] = func
+    end
+
+    --run it
+    return self:processFunction( func, file )
+end
+
+-- Run a function
+function template:processFunction( func, file )
+    --call the function safely
     local status, err = pcall( func )
 
     --if ok, add to output
@@ -162,13 +152,14 @@ function template:load( file, inline )
         if inline then
             return err
         else
-            luawa.response = luawa.response .. err
+            ngx.ctx.response = ngx.ctx.response .. err
             return true
         end
     else
-        return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err )
+        return luawa:error( 500, 'Template: ' .. ( file or 'unkown' ) .. ' :: ' .. err )
     end
 end
+
 
 --function to work before tostring
 function template:toString( string )
@@ -179,9 +170,8 @@ function template:toString( string )
     --otherwise as best
     return tostring( string )
 end
-
 --turn file => lua
-function template:process( code )
+function template:processFile( code )
     --minimize html? will probably break javascript!
     if self.config.minimize then code = code:gsub( '%s+', ' ' ) end
 
