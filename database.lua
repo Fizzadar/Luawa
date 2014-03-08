@@ -20,18 +20,12 @@ function database:_init()
     self.utils = luawa.utils
 end
 
--- Request start
-function database:_start()
-    --sometimes when caching below nil assignment fails?
-    self.db = nil
-end
-
 -- Request end
 function database:_end()
     --prevent 'Mysql error: failed to send query: closed' when caching
-    if self.db then
-        self.db:close()
-        self.db = nil
+    if ngx.ctx.db then
+        ngx.ctx.db:close()
+        ngx.ctx.db = nil
     end
 end
 
@@ -54,7 +48,7 @@ end
 -- Connect to the database
 function database:connect()
     --already connected?
-    if self.db then return true end
+    if ngx.ctx.db then return true end
 
     --environment
     local db, err = mysql:new()
@@ -71,7 +65,7 @@ function database:connect()
     if not ok then return false, 'failed to connect to database: ' .. err end
 
     --assign to self
-    self.db = db
+    ngx.ctx.db = db
 
     return true
 end
@@ -79,13 +73,13 @@ end
 -- Run a manual/raw query
 function database:query( sql )
     --check we're connected already
-    if not self.db then
+    if not ngx.ctx.db then
         local status, err = self:connect()
         if not status then return false, err end
     end
 
     --run query
-    local data, err = self.db:query( sql )
+    local data, err = ngx.ctx.db:query( sql )
 
     --borked sql?
     if not data then

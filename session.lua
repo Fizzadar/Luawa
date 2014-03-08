@@ -19,11 +19,11 @@ end
 -- Request start
 function session:_start()
     --get session id, or set
-    self.id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
+    ngx.ctx.session_id = self.header:getCookie( 'luawa_sessionid' ) or self:generateId()
 
     --is there a session in the memory? set to empty json string
-    if not ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ) then
-        ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, '{}' )
+    if not ngx.shared[luawa.shm_prefix .. 'session']:get( ngx.ctx.session_id ) then
+        ngx.shared[luawa.shm_prefix .. 'session']:set( ngx.ctx.session_id, '{}' )
     end
 end
 
@@ -42,15 +42,19 @@ end
 function session:set( key, value )
     --get table assign value
     local data = self:get()
+    if not data then return false end
+
     data[key] = value
     --encode + set to session
-    ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, json.encode( data ) )
+    ngx.shared[luawa.shm_prefix .. 'session']:set( ngx.ctx.session_id, json.encode( data ) )
 end
 
 --get session data
 function session:get( key )
     --get + decode
-    local data, err = json.decode( ngx.shared[luawa.shm_prefix .. 'session']:get( self.id ))
+    local data, err = json.decode( ngx.shared[luawa.shm_prefix .. 'session']:get( ngx.ctx.session_id ))
+    if not data then return false end
+
     --return data.key or data
     if not key then return data else return data[key] end
 end
@@ -61,7 +65,7 @@ function session:delete( key )
     local data = self:get()
     data[key] = nil
     --encode + set to session
-    ngx.shared[luawa.shm_prefix .. 'session']:set( self.id, json.encode( data ) )
+    ngx.shared[luawa.shm_prefix .. 'session']:set( ngx.ctx.session_id, json.encode( data ) )
 end
 
 

@@ -25,19 +25,13 @@ local function gettimeofday()
 end
 
 local debug = {
-    config = {},
-    logs = {
-        messages = {},
-        errors = {},
-        accesses = {},
-        queries = {}
-    }
+    config = {}
 }
 
 -- Request start
 function debug:_start()
     --reset the logs
-    self.logs = {
+    ngx.ctx.logs = {
         messages = {},
         errors = {},
         accesses = {},
@@ -115,8 +109,8 @@ function debug:__end()
         local debug_time = all_time - app_time - luawa_time
 
         --add logs, then template data, then stack
-        template:set( 'debug_data', luawa.utils.tableCopy( template.data ))
-        template:set( 'debug_logs', self.logs )
+        template:set( 'debug_data', luawa.utils.tableCopy( ngx.ctx.data ))
+        template:set( 'debug_logs', ngx.ctx.logs )
         template:set( 'debug_stack', stack )
         template:set( 'debug_app_time', app_time, true )
         template:set( 'debug_luawa_time', luawa_time, true )
@@ -145,21 +139,21 @@ end
 -- Basic debug message
 function debug:message( message )
     if self.config.enabled then
-        table.insert( self.logs.messages, { text = message })
+        table.insert( ngx.ctx.logs.messages, { text = message })
     end
 end
 
 -- Basic error message
 function debug:error( message )
     if self.config.enabled then
-        table.insert( self.logs.errors, { text = message, stack = lua_debug.traceback() })
+        table.insert( ngx.ctx.logs.errors, { text = message, stack = lua_debug.traceback() })
     end
 end
 
 -- Query message
 function debug:query( message )
     if self.config.enabled then
-        table.insert( self.logs.queries, { text = message })
+        table.insert( ngx.ctx.logs.queries, { text = message })
     end
 end
 
@@ -170,7 +164,7 @@ function debug:access( message, request )
     end
 
     if self.config.enabled then
-        table.insert( self.logs.messages, { text = message })
+        table.insert( ngx.ctx.logs.messages, { text = message })
     end
 end
 

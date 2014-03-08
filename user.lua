@@ -25,11 +25,6 @@ function user:_init()
     self.utils = luawa.utils
 end
 
--- Request end
-function user:_end()
-    self.user = nil
-end
-
 --generate a password from text + salt
 function user:generatePassword( password, salt )
     if not password or password == '' then return false end
@@ -160,7 +155,7 @@ function user:login( email, password, hashed )
 
     --hashed pw == pw from db?
     if user[1].password == password then
-        self.user = user[1]
+        ngx.ctx.user = user[1]
 
         --data to update
         local update = { login_time = os.time() }
@@ -169,7 +164,7 @@ function user:login( email, password, hashed )
         if self.config.reload_key then
             for i = 1, self.config.keys do
                 local key = self:generateKey( self.utils.randomString( 32 ) )
-                self.user['key' .. i] = key
+                ngx.ctx.user['key' .. i] = key
                 update['key' .. i] = key
             end
         end
@@ -179,7 +174,7 @@ function user:login( email, password, hashed )
 
         --set key cookies
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
         end
 
         return true
@@ -196,7 +191,7 @@ function user:logout()
     end
 
     --delete user if there
-    self.user = nil
+    ngx.ctx.user = nil
 
     --delete key cookies
     for i = 1, self.config.keys do
@@ -209,7 +204,7 @@ end
 
 --check login
 function user:checkLogin()
-    if self.user then return true end --already been logged in
+    if ngx.ctx.user then return true end --already been logged in
 
     --build db where table + shm key
     local wheres, key = {}, ''
@@ -223,11 +218,11 @@ function user:checkLogin()
     --try to get data from shm
     local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ) )
     if not err then
-        self.user = user
+        ngx.ctx.user = user
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
         end
 
         return true
@@ -245,11 +240,11 @@ function user:checkLogin()
     if user and user[1] then
         --set shared data
         ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ) )
-        self.user = user[1]
+        ngx.ctx.user = user[1]
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, self.user['key' .. i], self.config.expire )
+            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
         end
 
         return true
@@ -261,11 +256,11 @@ end
 --check permission
 function user:checkPermission( permission )
     if not self:checkLogin() then return false end
-    if not self.user.permissions then self.user.permissions = {} end
-    if self.user.permissions[permission] ~= nil then return self.user.permissions[permission] end
+    if not ngx.ctx.user.permissions then ngx.ctx.user.permissions = {} end
+    if ngx.ctx.user.permissions[permission] ~= nil then return ngx.ctx.user.permissions[permission] end
 
     --try to get shm permission
-    local data, err = ngx.shared[luawa.shm_prefix .. 'user']:get( 'permission_' .. self.user.id .. '_' .. permission:lower() )
+    local data, err = ngx.shared[luawa.shm_prefix .. 'user']:get( 'permission_' .. ngx.ctx.user.id .. '_' .. permission:lower() )
     if data ~= nil then
         return data
     end
@@ -275,7 +270,7 @@ function user:checkPermission( permission )
 SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
 WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
 AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
-AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
+AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. ngx.ctx.user.group
     )
 
     --permission?
@@ -286,15 +281,15 @@ AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. self.user.group
     end
 
     --set for remainder of request + return
-    ngx.shared[luawa.shm_prefix .. 'user']:set( 'permission_' .. self.user.id .. '_' .. permission:lower(), data )
-    self.user.permissions[permission] = data
+    ngx.shared[luawa.shm_prefix .. 'user']:set( 'permission_' .. ngx.ctx.user.id .. '_' .. permission:lower(), data )
+    ngx.ctx.user.permissions[permission] = data
     return data
 end
 
 --get data
 function user:getData()
     if not self:checkLogin() then return false end
-    return self.user
+    return ngx.ctx.user
 end
 
 --set data
@@ -312,20 +307,20 @@ function user:setData( fields )
     --get database result
     local result, err = self.db:update(
         self.config.dbprefix .. 'user', fields,
-        { id = self.user.id }
+        { id = ngx.ctx.user.id }
     )
     --if ok set data
     if result then
         for k, v in pairs( fields ) do
-            self.user[k] = v
+            ngx.ctx.user[k] = v
         end
         --build shared key
         local key = ''
         for i = 1, self.config.keys do
-            key = key .. self.user['key' .. i]
+            key = key .. ngx.ctx.user['key' .. i]
         end
         --overwrite shared data
-        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( self.user ) )
+        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( ngx.ctx.user ) )
     end
     return result, err
 end
