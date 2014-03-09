@@ -1,14 +1,19 @@
 -- Luawa
 -- File: request.lua
--- Desc: holds/maps to request data (request.get & request.post)
+-- Desc: holds/prepares request data (gets & posts)
 
 local ngx = ngx
 
 local request = {}
 
+-- Init
+function request:_init()
+    self.utils = luawa.utils
+end
+
 -- Start
 function request:_start()
-    --bind .get to ngx.req function
+    --bind .get => ngx uri args
     local mt = {
         __index = function( table, key )
             local args = ngx.req.get_uri_args()
@@ -18,9 +23,9 @@ function request:_start()
     self.get = {}
     setmetatable( self.get, mt )
 
-    --prepare post args
+    --read post data/args
     ngx.req.read_body()
-    --bind .post to ngx.req function
+    --bind .post => ngx post args
     local mt = {
         __index = function( table, key )
             local args = ngx.req.get_post_args( luawa.limit_post )
@@ -30,7 +35,7 @@ function request:_start()
     self.post = {}
     setmetatable( self.post, mt )
 
-    --bind .basics
+    --bind .other_bits
     local mt = {
         __index = function( table, key )
             if key == 'method' then

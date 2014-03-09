@@ -39,13 +39,13 @@ function debug:_start()
     }
 
     if self.config.enabled then
-        self.stack = {}
-        self.time = gettimeofday()
-        self.start_time = self.time
+        ngx.ctx.stack = {}
+        ngx.ctx.time = gettimeofday()
+        ngx.ctx.start_time = ngx.ctx.time
 
         lua_debug.sethook( function( event, line )
             local time = gettimeofday()
-            local time_diff = ( time - self.time ) / 1000
+            local time_diff = ( time - ngx.ctx.time ) / 1000
 
             local info = lua_debug.getinfo( 2 )
 
@@ -57,33 +57,33 @@ function debug:_start()
                 path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
             end
 
-            if self.stack[path] then
-                self.stack[path].lines = self.stack[path].lines + 1
-                self.stack[path].time = self.stack[path].time + time_diff
+            if ngx.ctx.stack[path] then
+                ngx.ctx.stack[path].lines = ngx.ctx.stack[path].lines + 1
+                ngx.ctx.stack[path].time = ngx.ctx.stack[path].time + time_diff
                 local func_name = info.name or 'unknown'
-                if not self.stack[path].funcs[func_name] then
-                    self.stack[path].funcs[func_name] = { lines = 1, time = time_diff }
+                if not ngx.ctx.stack[path].funcs[func_name] then
+                    ngx.ctx.stack[path].funcs[func_name] = { lines = 1, time = time_diff }
                 else
-                    self.stack[path].funcs[func_name].lines = self.stack[path].funcs[func_name].lines + 1
-                    self.stack[path].funcs[func_name].time = self.stack[path].funcs[func_name].time + time_diff
+                    ngx.ctx.stack[path].funcs[func_name].lines = ngx.ctx.stack[path].funcs[func_name].lines + 1
+                    ngx.ctx.stack[path].funcs[func_name].time = ngx.ctx.stack[path].funcs[func_name].time + time_diff
                 end
             else
                 local funcs = {}
                 funcs[info.name or 'unknown'] = { lines = 1, time = time_diff }
-                self.stack[path] = {
+                ngx.ctx.stack[path] = {
                     lines = 1,
                     time = time_diff,
                     funcs = funcs
                 }
             end
 
-            self.time = gettimeofday()
+            ngx.ctx.time = gettimeofday()
         end, 'l' )
     end
 end
 
--- Special request end after normal _end's
-function debug:__end()
+-- End
+function debug:_end()
     --include debug?
     if self.config.enabled then
         lua_debug.sethook()
@@ -91,7 +91,7 @@ function debug:__end()
 
         --work out stack
         local stack, app_time, luawa_time = {}, 0, 0
-        for file, data in pairs( self.stack ) do
+        for file, data in pairs( ngx.ctx.stack ) do
             if file:find( '^luawa/[^%/]+%.lua$' ) then
                 for name, func in pairs( data.funcs ) do
                     if name ~= 'unknown' then
@@ -105,7 +105,7 @@ function debug:__end()
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
 
         --work out total request time (including most debug stuff)
-        local all_time = ( gettimeofday() - self.start_time ) / 1000
+        local all_time = ( gettimeofday() - ngx.ctx.start_time ) / 1000
         local debug_time = all_time - app_time - luawa_time
 
         --add logs, then template data, then stack

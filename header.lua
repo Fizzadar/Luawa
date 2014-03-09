@@ -16,8 +16,10 @@ end
 
 -- Start
 function header:_start()
-    ngx.ctx.cookies, ngx.ctx.new_cookies = {}, {}
+    ngx.ctx.new_cookies = {}
 
+    --get/parse cookies
+    ngx.ctx.cookies = {}
     local cookie_header = ngx.req.get_headers()['cookie']
     if cookie_header then
         for k, v in cookie_header:gmatch( '([^;]+)' ) do

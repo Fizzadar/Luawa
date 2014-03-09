@@ -12,7 +12,7 @@ local io = io
 local ngx = ngx
 
 local luawa = {
-    version = '0.9.4',
+    version = '0.9.5-unreleased',
     --base status
     requests = ngx.shared.requests,
     init = false,
@@ -37,6 +37,7 @@ local luawa = {
     },
     --modules with _end functions
     module_ends = {
+        'debug',
         'database',
         'header',
         'template'
@@ -193,9 +194,6 @@ end
 -- End the current request
 function luawa:endRequest( error, url )
     if not self then self = luawa end
-
-    --debug module first (special end)
-    self.debug:__end()
 
     --end modules
     for k, v in pairs( self.module_ends ) do
