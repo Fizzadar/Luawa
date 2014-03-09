@@ -22,10 +22,9 @@ end
 
 -- Request end
 function database:_end()
-    --prevent 'Mysql error: failed to send query: closed' when caching
+    --close any open connections
     if ngx.ctx.db then
         ngx.ctx.db:close()
-        ngx.ctx.db = nil
     end
 end
 
