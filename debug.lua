@@ -48,11 +48,10 @@ function debug:_start()
             local time_diff = ( time - ngx.ctx.time ) / 1000
 
             local info = lua_debug.getinfo( 2 )
-
-            local a, b, path = info.source:find( '^@%/([^%s]+)$' )
+            local a, b, path = info.source:find( '^@%./([^%s]+)$' )
             if not path then
-                local a, b, func_name = info.source:find( '^local function _([%w_]+)' )
-                path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
+                local a, b, func_name = info.source:find( '^--luawa_file:([^\n]+)' )
+                path = func_name and func_name .. '.lua' or 'unknown'
             end
 
             if ngx.ctx.stack[path] then
