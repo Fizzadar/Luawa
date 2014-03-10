@@ -6,7 +6,7 @@ local pairs = pairs
 local type = type
 local tostring = tostring
 local ngx = ngx
-local mysql = require( luawa.root_dir .. 'luawa/lib/mysql' )
+local mysql = require( 'luawa/lib/mysql' )
 
 local database = {
     config = {
@@ -22,10 +22,9 @@ end
 
 -- Request end
 function database:_end()
-    --prevent 'Mysql error: failed to send query: closed' when caching
+    --close any open connections
     if ngx.ctx.db then
         ngx.ctx.db:close()
-        ngx.ctx.db = nil
     end
 end
 

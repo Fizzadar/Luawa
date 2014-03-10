@@ -45,18 +45,17 @@ local luawa = {
 }
 
 -- Set the config
-function luawa:setConfig( dir, file )
+function luawa:setConfig( file )
     if self.init then return end
 
-    self.root_dir = dir or ''
     self.config_file = file or 'config'
 
     --load the config file (must return)
-    local config = require( dir .. file )
+    local config = require( self.config_file )
 
     --include modules
     for k, v in pairs( luawa.modules ) do
-        luawa[v] = require( dir .. 'luawa/' .. v )
+        luawa[v] = require( 'luawa/' .. v )
     end
 
     --set get/post
@@ -166,7 +165,7 @@ function luawa:processFile( file )
     end
 
     --load file as function
-    local func, err = loadfile( '/' .. self.root_dir .. file .. '.lua' )
+    local func, err = loadfile( './' .. file .. '.lua' )
     if not func then return self:error( 500, err ) end
 
     --save in cache

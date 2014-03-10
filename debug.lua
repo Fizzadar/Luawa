@@ -50,9 +50,7 @@ function debug:_start()
             local info = lua_debug.getinfo( 2 )
 
             local a, b, path = info.source:find( '^@%/([^%s]+)$' )
-            if path then
-                path = path:gsub( luawa.root_dir, '' )
-            else
+            if not path then
                 local a, b, func_name = info.source:find( '^local function _([%w_]+)' )
                 path = func_name and func_name:gsub( '_', '/' ) .. '.lua' or 'unknown'
             end

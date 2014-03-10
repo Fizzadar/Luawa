@@ -343,9 +343,6 @@
                         <td>Nginx-Lua Version:</td>
                         <td><span><?=self:get( 'nginx_lua_version' ) ?></span></td>
                     </tr><tr>
-                        <td>Luawa Root:</td>
-                        <td><span><?=luawa.root_dir ?></span></td>
-                    </tr><tr>
                         <td>Cache:</td>
                         <td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
                     </tr><tr>

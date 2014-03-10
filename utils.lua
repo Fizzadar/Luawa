@@ -3,9 +3,9 @@
 -- Desc: useful utility functions
 
 local json = require( 'cjson.safe' )
-local hasher = require( luawa.root_dir .. 'luawa/lib/sha512' )
-local random = require( luawa.root_dir .. 'luawa/lib/random' )
-local str = require( luawa.root_dir .. 'luawa/lib/string' )
+local hasher = require( 'luawa/lib/sha512' )
+local random = require( 'luawa/lib/random' )
+local str = require( 'luawa/lib/string' )
 
 local utils = {}
 

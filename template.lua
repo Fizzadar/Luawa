@@ -117,7 +117,7 @@ function template:load( file, inline )
     end
 
     --read template file
-    local f, err = io.open( luawa.root_dir .. self.config.dir .. file .. '.lhtml', 'r' )
+    local f, err = io.open( self.config.dir .. file .. '.lhtml', 'r' )
     if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
     --read the file
     local string, err = f:read( '*a' )
