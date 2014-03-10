@@ -41,6 +41,12 @@ function request:_start()
             if key == 'method' then
                 return ngx.req.get_method()
             end
+            if key == 'hostname' then
+                return ngx.req.get_headers().host
+            end
+            if key == 'remote_addr' then
+                return ngx.var.remote_addr
+            end
         end
     }
     setmetatable( self, mt )
