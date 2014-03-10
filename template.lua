@@ -116,18 +116,8 @@ function template:load( file, inline )
         return self:processFunction( self.cache[file], file )
     end
 
-    --read template file
-    local f, err = io.open( self.config.dir .. file .. '.lhtml', 'r' )
-    if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
-    --read the file
-    local string, err = f:read( '*a' )
-    if not string then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
-    --close file
-    f:close()
-
-    local func_name = file:gsub( '/', '_' )
     --process string lhtml => lua
-    string = self:processFile( string )
+    string = self:processFile( file )
 
     --compile our string
     local func, err = loadstring( string )
@@ -171,12 +161,22 @@ function template:toString( string )
     return tostring( string )
 end
 --turn file => lua
-function template:processFile( code )
+function template:processFile( file )
+    --read template file
+    local f, err = io.open( self.config.dir .. file .. '.lhtml', 'r' )
+    if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
+    --read the file
+    local code, err = f:read( '*a' )
+    if not code then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
+    --close file
+    f:close()
+
     --minimize html? will probably break javascript!
     if self.config.minimize then code = code:gsub( '%s+', ' ' ) end
 
     --prepend bits
-    code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
+    local name = '--luawa_file:' .. file .. '\n'
+    code = name .. 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
     code = code:gsub( '<%?=([#{},/_%+\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. self:toString( %1 ) .. [[' )
     --replace <??=vars?>
