@@ -5,6 +5,7 @@
 local tonumber = tonumber
 local lua_debug = debug
 local ffi = require( 'ffi' )
+local luawa = luawa
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
 --https://github.com/jgrahamc/lulip
@@ -48,7 +49,7 @@ function debug:_start()
             local time_diff = ( time - ngx.ctx.time ) / 1000
 
             local info = lua_debug.getinfo( 2 )
-            local a, b, path = info.source:find( '^@%./([^%s]+)$' )
+            local a, b, path = info.source:find( '^@/' .. luawa.root .. '([^%s]+)$' )
             if not path then
                 local a, b, func_name = info.source:find( '^--luawa_file:([^\n]+)' )
                 path = func_name and func_name .. '.lua' or 'unknown'
@@ -105,6 +106,17 @@ function debug:_end()
         local all_time = ( gettimeofday() - ngx.ctx.start_time ) / 1000
         local debug_time = all_time - app_time - luawa_time
 
+        --count caches
+        local cached_templates, cached_files = 0, 0
+        if luawa.cache then
+            for _, _ in pairs( luawa.cache ) do
+                cached_files = cached_files + 1
+            end
+            for _, _ in pairs( luawa.template.cache ) do
+                cached_templates = cached_templates + 1
+            end
+        end
+
         --add logs, then template data, then stack
         template:set( 'debug_data', luawa.utils.tableCopy( ngx.ctx.data ))
         template:set( 'debug_logs', ngx.ctx.logs )
@@ -113,6 +125,8 @@ function debug:_end()
         template:set( 'debug_luawa_time', luawa_time, true )
         template:set( 'debug_debug_time', debug_time, true )
         template:set( 'debug_request_time', app_time + luawa_time, true )
+        template:set( 'debug_cached_files', cached_files )
+        template:set( 'debug_cached_templates', cached_templates )
 
         --versions
         local a, b, v1, v2, v3 = tostring( ngx.config.nginx_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )

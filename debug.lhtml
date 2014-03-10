@@ -361,10 +361,10 @@
                         <td><?=#ngx.shared[luawa.shm_prefix .. 'user']:get_keys( 0 ) ?></td>
                     </tr><tr>
                         <td>App Cache</td>
-                        <td><?=#ngx.shared[luawa.shm_prefix .. 'cache_app']:get_keys( 0 ) ?></td>
+                        <td><?=self:get( 'debug_cached_files' ) ?></td>
                     </tr><tr>
                         <td>Template Cache</td>
-                        <td><?=#ngx.shared[luawa.shm_prefix .. 'cache_template']:get_keys( 0 ) ?></td>
+                        <td><?=self:get( 'debug_cached_templates' ) ?></td>
                     </tr>
                 </tbody>
             </table>
