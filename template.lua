@@ -9,6 +9,7 @@ local type = type
 local table = table
 local io = io
 local ngx = ngx
+local luawa = luawa
 
 local template = {
     config = {
@@ -163,7 +164,7 @@ end
 --turn file => lua
 function template:processFile( file )
     --read template file
-    local f, err = io.open( self.config.dir .. file .. '.lhtml', 'r' )
+    local f, err = io.open( luawa.root .. self.config.dir .. file .. '.lhtml', 'r' )
     if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
     --read the file
     local code, err = f:read( '*a' )
