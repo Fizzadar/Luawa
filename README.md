@@ -1,4 +1,4 @@
-# Lua-wa v0.9.4
+# Lua-wa
 
 Lua-wa (loo-ah-wa) is a web-application framework for Lua+Nginx.
 
