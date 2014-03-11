@@ -2,6 +2,7 @@
 -- File: session.lua
 -- Desc: deals with session management (memory-based, shared between ngx workers)
 
+local table = table
 local json = require( 'cjson.safe' )
 
 local session = {

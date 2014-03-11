@@ -2,11 +2,15 @@
 -- File: utils.lua
 -- Desc: useful utility functions
 
+local type = type
+local tostring = tostring
+local pairs = pairs
+local string = string
 local json = require( 'cjson.safe' )
-local luawa = luawa
 local hasher = require( luawa.root .. 'luawa/lib/sha512' )
 local random = require( luawa.root .. 'luawa/lib/random' )
 local str = require( luawa.root .. 'luawa/lib/string' )
+local luawa = luawa
 
 local utils = {}
 
@@ -275,12 +279,12 @@ function utils.explode( str, divide )
     local pos, arr = 0, {}
 
     --for each divider found
-    for st, sp in function() return string.find( str, divide, pos, true ) end do
-        table.insert( arr, string.sub( str, pos, st - 1 ) ) --attach chars left of current divider
+    for st, sp in function() return str:find( divide, pos, true ) end do
+        table.insert( arr, str:gsub( pos, st - 1 ) ) --attach chars left of current divider
         pos = sp + 1 --jump past current divider
     end
 
-    table.insert( arr, string.sub( str, pos ) ) -- Attach chars right of last divider
+    table.insert( arr, str:sub( pos )) -- Attach chars right of last divider
     return arr
 end
 

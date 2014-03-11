@@ -2,6 +2,10 @@
 -- File: debug.lua
 -- Desc: helps debug & profile Luawa apps
 
+local pairs = pairs
+local table = table
+local type = type
+local tostring = tostring
 local tonumber = tonumber
 local lua_debug = debug
 local ffi = require( 'ffi' )
@@ -84,6 +88,10 @@ end
 function debug:_end()
     --include debug?
     if self.config.enabled then
+        --first work out total request time (including most debug stuff)
+        local all_time = ( gettimeofday() - ngx.ctx.start_time ) / 1000
+
+        --remove debug hook
         lua_debug.sethook()
         local template = luawa.template
 
@@ -101,9 +109,7 @@ function debug:_end()
             app_time = app_time + data.time
         end
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
-
-        --work out total request time (including most debug stuff)
-        local all_time = ( gettimeofday() - ngx.ctx.start_time ) / 1000
+        --work out how long debug took
         local debug_time = all_time - app_time - luawa_time
 
         --count caches

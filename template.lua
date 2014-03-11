@@ -2,6 +2,7 @@
 -- File: template.lua
 -- Desc: lhtml templating
 
+local require = require
 local tostring = tostring
 local pcall = pcall
 local loadstring = loadstring

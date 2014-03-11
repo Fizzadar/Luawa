@@ -2,6 +2,8 @@
 -- File: user.lua
 -- Desc: deals with user logins, permissions & groups
 
+local os = os
+local table = table
 local pairs = pairs
 local ngx = ngx
 local json = require( 'cjson.safe' )
@@ -25,7 +27,7 @@ function user:_init()
     self.utils = luawa.utils
 end
 
---generate a password from text + salt
+-- Generate a password from text + salt
 function user:generatePassword( password, salt )
     if not password or password == '' then return false end
 
@@ -39,12 +41,12 @@ function user:generatePassword( password, salt )
     return str
 end
 
---generate a key
+-- Generate a key
 function user:generateKey( entropy )
     return self.utils.digest( entropy .. self.utils.randomString( 32 ) )
 end
 
---reset a password
+-- Start password reset
 function user:resetPassword( email )
     --get user in question
     local user = self.db:select(
@@ -73,7 +75,7 @@ function user:resetPassword( email )
     return password_reset_key
 end
 
---process reset password
+-- Process reset password
 function user:resetPasswordLogin( email, key )
     --check key+email
     local user = self.db:select(
@@ -99,7 +101,7 @@ function user:resetPasswordLogin( email, key )
     return self:login( email, user[1].password, true )
 end
 
---register a user
+-- Register a user
 function user:register( email, password, name, group )
     if not name then name = 'Unknown' end
     if password == '' then return false, 'Invalid password' end
@@ -138,7 +140,7 @@ function user:register( email, password, name, group )
     if not err then return true else return false, err end
 end
 
---login a user
+-- Login a user
 function user:login( email, password, hashed )
     --get user
     local user, err = self.db:select(
@@ -183,7 +185,7 @@ function user:login( email, password, hashed )
     end
 end
 
---logout
+-- Logout
 function user:logout()
     --reload key before logging out?
     if self.config.reload_key then
@@ -202,7 +204,7 @@ function user:logout()
     return true
 end
 
---check login
+-- Check login
 function user:checkLogin()
     if ngx.ctx.user then return true end --already been logged in
 
@@ -253,7 +255,7 @@ function user:checkLogin()
     end
 end
 
---check permission
+-- Check permission
 function user:checkPermission( permission )
     if not self:checkLogin() then return false end
     if not ngx.ctx.user.permissions then ngx.ctx.user.permissions = {} end
@@ -286,13 +288,13 @@ AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. ngx.ctx.user.group
     return data
 end
 
---get data
+-- Get data
 function user:getData()
     if not self:checkLogin() then return false end
     return ngx.ctx.user
 end
 
---set data
+-- Set data
 function user:setData( fields )
     if not self:checkLogin() then return false end
     --password?
@@ -320,10 +322,9 @@ function user:setData( fields )
             key = key .. ngx.ctx.user['key' .. i]
         end
         --overwrite shared data
-        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( ngx.ctx.user ) )
+        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( ngx.ctx.user ))
     end
     return result, err
 end
 
---return object
 return user

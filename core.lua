@@ -4,7 +4,7 @@
 
 local pairs = pairs
 local require = require
-local loadstring = loadstring
+local loadfile = loadfile
 local pcall = pcall
 local type = type
 local tostring = tostring

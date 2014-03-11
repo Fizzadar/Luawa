@@ -4,6 +4,7 @@
 
 local pairs = pairs
 local type = type
+local table = table
 local tostring = tostring
 local ngx = ngx
 local luawa = luawa
