@@ -153,6 +153,13 @@ function template:processFunction( func, file )
 end
 
 
+function template:error( status, err )
+    ngx.header['Content-Type'] = 'text/plain'
+    ngx.say( 'Template error:' )
+    ngx.say( err )
+    ngx.exit( status )
+end
+
 --function to work before tostring
 function template:toString( string )
     --nil returns blank
@@ -164,12 +171,14 @@ function template:toString( string )
 end
 --turn file => lua
 function template:processFile( file )
+    local error_target = self.config.dir ~= 'luawa/' and 'luawa' else 'self'
+
     --read template file
     local f, err = io.open( luawa.root .. self.config.dir .. file .. '.lhtml', 'r' )
-    if not f then return luawa:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
+    if not f then return [error_target]:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
     --read the file
     local code, err = f:read( '*a' )
-    if not code then return luawa:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
+    if not code then return [error_target]:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
     --close file
     f:close()
 
