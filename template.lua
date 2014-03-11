@@ -123,7 +123,13 @@ function template:load( file, inline )
 
     --compile our string
     local func, err = loadstring( string )
-    if not func then return luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err ) end
+    if not func then
+        if self.config.dir == 'luawa/' then
+            self:error( 500, 'Template: ' .. file .. ' :: ' .. err )
+        else
+            luawa:error( 500, 'Template: ' .. file .. ' :: ' .. err )
+        end
+    end
 
     --save if cache
     if cache then
@@ -152,14 +158,6 @@ function template:processFunction( func, file )
     end
 end
 
-
-function template:error( status, err )
-    ngx.header['Content-Type'] = 'text/plain'
-    ngx.say( 'Template error:' )
-    ngx.say( err )
-    ngx.exit( status )
-end
-
 --function to work before tostring
 function template:toString( string )
     --nil returns blank
@@ -169,16 +167,22 @@ function template:toString( string )
     --otherwise as best
     return tostring( string )
 end
+
 --turn file => lua
 function template:processFile( file )
-    local error_target = self.config.dir ~= 'luawa/' and 'luawa' else 'self'
+    local function exit( message )
+        if self.config.dir == 'luawa/' then
+            return self:error( 500, message )
+        end
+        return luawa:error( 500, message )
+    end
 
     --read template file
     local f, err = io.open( luawa.root .. self.config.dir .. file .. '.lhtml', 'r' )
-    if not f then return [error_target]:error( 500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
+    if not f then return exit( 'Template: ' .. file .. ' :: Cant open/access file: ' .. err ) end
     --read the file
     local code, err = f:read( '*a' )
-    if not code then return [error_target]:error( 500, 'Template: ' .. file .. ' :: File read error: ' .. err ) end
+    if not code then return exit( 'Template: ' .. file .. ' :: File read error: ' .. err ) end
     --close file
     f:close()
 
@@ -202,6 +206,12 @@ function template:processFile( file )
     return code
 end
 
+-- Emergency exit for errors in Luawa's templates!
+function template:error( status, err )
+    ngx.header['Content-Type'] = 'text/plain'
+    ngx.say( 'Template error:' )
+    ngx.say( err )
+    ngx.exit( status )
+end
 
---return
 return template
