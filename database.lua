@@ -138,7 +138,7 @@ function database:select( table_name, fields, wheres, options )
     local sql
 
     --table & fields
-    local fields = type( fields ) == 'table' and '`' .. table.concat( fields, '`, `' ) .. '`' .. options.select or '*'
+    local fields = type( fields ) == 'table' and '' .. table.concat( fields, ', ' ) .. '' .. options.select or '*'
     sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
 
     --wheres
