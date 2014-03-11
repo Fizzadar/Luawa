@@ -283,7 +283,7 @@
                         <td><span><?=self:get( 'debug_debug_time' ) ?>ms</span></td>
                     </tr><tr>
                         <td>Hostname</td>
-                        <td><?=luawa.request.hostname ?></td>
+                        <td><?=luawa.request.hostname ?>:<?=luawa.request.hostport ?></td>
                     </tr><tr>
                         <td>Method</td>
                         <td><?=luawa.request.method ?></td>
