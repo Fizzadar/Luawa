@@ -44,7 +44,7 @@ function request:_start()
             end
             if key == 'hostname' or key == 'hostport' then
                 local header = ngx.req.get_headers().host
-                local a, b, host, port = header:find( '^([^:]+):([0-9]+)$' )
+                local a, b, host, port = header:find( '^([^:]+):?([0-9]*)$' )
                 return key == 'hostname' and host or port
             end
             if key == 'remote_addr' then
