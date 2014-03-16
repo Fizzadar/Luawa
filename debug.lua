@@ -53,10 +53,10 @@ function debug:_start()
             local time_diff = ( time - ngx.ctx.time ) / 1000
 
             local info = lua_debug.getinfo( 2 )
-            local a, b, path = info.source:find( '^@/' .. luawa.root .. '([^%s]+)$' )
+            local a, b, path = info.source:find( '^@' .. luawa.root .. '([^%s]+)$' )
             if not path then
                 local a, b, func_name = info.source:find( '^--luawa_file:([^\n]+)' )
-                path = func_name and func_name .. '.lua' or 'unknown'
+                path = func_name and func_name .. '.lhtml' or 'unknown'
             end
 
             if ngx.ctx.stack[path] then
@@ -69,13 +69,18 @@ function debug:_start()
                     ngx.ctx.stack[path].funcs[func_name].lines = ngx.ctx.stack[path].funcs[func_name].lines + 1
                     ngx.ctx.stack[path].funcs[func_name].time = ngx.ctx.stack[path].funcs[func_name].time + time_diff
                 end
+                if not ngx.ctx.stack[path].line_counts[line] then
+                    ngx.ctx.stack[path].line_counts[line] = { count = 1, time = time_diff }
+                else
+                    ngx.ctx.stack[path].line_counts[line].count = ngx.ctx.stack[path].line_counts[line].count + 1
+                    ngx.ctx.stack[path].line_counts[line].time = ngx.ctx.stack[path].line_counts[line].time + time_diff
+                end
             else
-                local funcs = {}
-                funcs[info.name or 'unknown'] = { lines = 1, time = time_diff }
                 ngx.ctx.stack[path] = {
                     lines = 1,
                     time = time_diff,
-                    funcs = funcs
+                    funcs = { [info.name or 'unknown'] = { lines = 1, time = time_diff }},
+                    line_counts = {}
                 }
             end
 
@@ -86,6 +91,9 @@ end
 
 -- End
 function debug:_end()
+    if ngx.ctx.debug_ended then return end
+    ngx.ctx.debug_ended = true
+
     --include debug?
     if self.config.enabled then
         --first work out total request time (including most debug stuff)
@@ -105,7 +113,22 @@ function debug:_end()
                     end
                 end
             end
-            table.insert( stack, { file = file, data = data } )
+
+            local funcs = {}
+            for k, v in pairs( data.funcs ) do
+                table.insert( funcs, { name = k, lines = v.lines, time = v.time })
+            end
+            table.sort( funcs, function( a, b ) return a.time > b.time end )
+            data.funcs = funcs
+
+            local line_counts = {}
+            for k, v in pairs( data.line_counts ) do
+                table.insert( line_counts, { line = k - 1, count = v.count, time = v.time })
+            end
+            table.sort( line_counts, function( a, b ) return a.time > b.time end )
+            data.line_counts = line_counts
+
+            table.insert( stack, { file = file, data = data })
             app_time = app_time + data.time
         end
         table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
