@@ -43,7 +43,7 @@ end
 
 -- Generate a key
 function user:generateKey( entropy )
-    return self.utils.digest( entropy .. self.utils.randomString( 32 ) )
+    return self.utils.digest( entropy .. self.utils.randomString( 32 ))
 end
 
 -- Start password reset
@@ -58,7 +58,7 @@ function user:resetPassword( email )
     end
 
     --generate temporary reset key password_reset_key
-    local password_reset_key = self:generateKey( self.utils.randomString( 32 ) )
+    local password_reset_key = self:generateKey( self.utils.randomString( 32 ))
 
     --add key + time to database
     local status, err = self.db:update(
@@ -189,7 +189,7 @@ end
 function user:logout()
     --reload key before logging out?
     if self.config.reload_key then
-        self:setData( { key = self.utils.digest( self.utils.randomString( 32 ) ) } )
+        self:setData( { key = self.utils.digest( self.utils.randomString( 32 ))})
     end
 
     --delete user if there
@@ -218,7 +218,7 @@ function user:checkLogin()
     end
 
     --try to get data from shm
-    local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ) )
+    local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ))
     if not err then
         ngx.ctx.user = user
 
@@ -241,7 +241,7 @@ function user:checkLogin()
     --do we have a user?
     if user and user[1] then
         --set shared data
-        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ) )
+        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ))
         ngx.ctx.user = user[1]
 
         --set key cookies again (to stop expiration)
