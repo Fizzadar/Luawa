@@ -187,9 +187,13 @@ end
 
 -- Logout
 function user:logout()
-    --reload key before logging out?
+    --remove current keys
     if self.config.reload_key then
-        self:setData( { key = self.utils.digest( self.utils.randomString( 32 ))})
+        local update = {}
+        for i = 1, self.config.keys do
+            update['key' .. i] = ''
+        end
+        self:setData( update )
     end
 
     --delete user if there
