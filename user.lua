@@ -258,6 +258,7 @@ end
 -- Check permission
 function user:checkPermission( permission )
     if not self:checkLogin() then return false end
+    if ngx.ctx.user.group == self.config.super then return true end
     if not ngx.ctx.user.permissions then ngx.ctx.user.permissions = {} end
     if ngx.ctx.user.permissions[permission] ~= nil then return ngx.ctx.user.permissions[permission] end
 
