@@ -1,15 +1,6 @@
-# ************************************************************
-# Sequel Pro SQL dump
-# Version 4096
-#
-# http://www.sequelpro.com/
-# http://code.google.com/p/sequel-pro/
-#
-# Host: localhost (MySQL 5.5.32-MariaDB)
-# Database: oxypanel
-# Generation Time: 2014-02-01 16:57:52 +0000
-# ************************************************************
-
+# Luawa
+# File: layout.sql
+# Desc: Luawa tables layout
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -20,29 +11,15 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
-# Dump of table log
-# ------------------------------------------------------------
-
-CREATE TABLE `log` (
-  `object_type` varchar(16) NOT NULL DEFAULT '',
-  `object_id` int(10) unsigned NOT NULL,
-  `user_id` int(10) unsigned NOT NULL,
-  `time` int(10) unsigned NOT NULL,
-  `action` varchar(128) NOT NULL DEFAULT '',
-  `data` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-
-
 # Dump of table user
 # ------------------------------------------------------------
 
-CREATE TABLE `user` (
+CREATE TABLE IF NOT EXISTS `user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `email` varchar(128) NOT NULL DEFAULT '' COMMENT 'used to identify',
   `password` varchar(255) NOT NULL DEFAULT '' COMMENT 'hashed pw',
   `salt` varchar(255) NOT NULL DEFAULT '' COMMENT 'salt for hash',
-  `group` tinyint(3) unsigned NOT NULL DEFAULT '2' COMMENT '0=admin;1=user;1>=custom',
+  `group` tinyint(3) unsigned NOT NULL DEFAULT '2' COMMENT '1=admin;2=user;2>=custom',
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'name/display only',
   `login_time` int(10) unsigned NOT NULL DEFAULT '0',
   `register_time` int(10) unsigned NOT NULL DEFAULT '0',
@@ -67,18 +44,17 @@ CREATE TABLE `user` (
 # Dump of table user_groups
 # ------------------------------------------------------------
 
-CREATE TABLE `user_groups` (
+CREATE TABLE IF NOT EXISTS `user_groups` (
   `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-
 # Dump of table user_messages
 # ------------------------------------------------------------
 
-CREATE TABLE `user_messages` (
+CREATE TABLE IF NOT EXISTS `user_messages` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -88,7 +64,7 @@ CREATE TABLE `user_messages` (
 # Dump of table user_permissions
 # ------------------------------------------------------------
 
-CREATE TABLE `user_permissions` (
+CREATE TABLE IF NOT EXISTS `user_permissions` (
   `group` tinyint(3) unsigned NOT NULL,
   `permission` varchar(64) NOT NULL DEFAULT '',
   UNIQUE KEY `group_id` (`group`,`permission`),
