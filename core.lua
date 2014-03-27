@@ -105,13 +105,16 @@ end
 -- Run luawa
 function luawa:run()
     --setup fail?
-    local file, err = luawa:prepareRequest()
+    local file, err = self:prepareRequest()
     if not file then
         return self:error( 500, 'Invalid Request' )
     end
 
     --go!
-    return self:processRequest( file )
+    self:processRequest( file )
+
+    --end
+    self:endRequest()
 end
 
 
@@ -148,16 +151,6 @@ function luawa:prepareRequest()
 end
 
 
--- Process a request from the server
-function luawa:processRequest( file )
-    --process the file
-    local result = self:processFile( file )
-
-    --end the request
-    self:endRequest()
-end
-
-
 -- Load a file as a function & process
 function luawa:processFile( file )
     --try cache
@@ -177,7 +170,6 @@ function luawa:processFile( file )
     --run it
     return self:processFunction( func, file )
 end
-
 
 
 -- Process a function
