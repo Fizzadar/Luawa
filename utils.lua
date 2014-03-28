@@ -36,7 +36,7 @@ end
 function utils.tableString( table, level )
     local function tableString( table, level )
         --not a table?
-        if type( table ) ~= 'table' then return false end
+        if type( table ) ~= 'table' then return tostring( table ) end
 
         local str = ''
         local table, level = table or {}, level or 0
@@ -275,16 +275,15 @@ end
 
 -- Explode, credit: http://richard.warburton.it
 function utils.explode( str, divide )
-    if divide == '' then return false end
     local pos, arr = 0, {}
 
     --for each divider found
-    for st, sp in function() return str:find( divide, pos, true ) end do
-        table.insert( arr, str:gsub( pos, st - 1 ) ) --attach chars left of current divider
+    for st, sp in ( function() return str:find( divide, pos, true ) end ) do
+        table.insert( arr, str:sub( pos, st - 1 )) --attach chars left of current divider
         pos = sp + 1 --jump past current divider
     end
-
     table.insert( arr, str:sub( pos )) -- Attach chars right of last divider
+
     return arr
 end
 
