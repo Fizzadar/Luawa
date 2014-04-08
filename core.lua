@@ -55,8 +55,8 @@ function luawa:setConfig( root, file )
     local config = require( self.root .. self.config_file )
 
     --include modules
-    for k, v in pairs( luawa.modules ) do
-        luawa[v] = require( self.root .. 'luawa/' .. v )
+    for k, v in pairs( self.modules ) do
+        self[v] = require( self.root .. 'luawa/' .. v )
     end
 
     --set get/post
