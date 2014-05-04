@@ -6,7 +6,7 @@ local os = os
 local table = table
 local pairs = pairs
 local ngx = ngx
-local json = require( 'cjson.safe' )
+local json = require('cjson.safe')
 
 local user = {
     config = {
@@ -28,7 +28,7 @@ function user:_init()
 end
 
 -- Generate a password from text + salt
-function user:generatePassword( password, salt )
+function user:generatePassword(password, salt)
     if not password or password == '' then return false end
 
     --start with salt & secret
@@ -36,29 +36,29 @@ function user:generatePassword( password, salt )
     --loop stretching times (increase rainbow table calculation time)
     --each loop inputs the users password
     for i = 1, self.config.stretching do
-        str = self.utils.digest( str .. password )
+        str = self.utils.digest(str .. password)
     end
     return str
 end
 
 -- Generate a key
-function user:generateKey( entropy )
-    return self.utils.digest( entropy .. self.utils.randomString( 32 ))
+function user:generateKey(entropy)
+    return self.utils.digest(entropy .. self.utils.randomString(32))
 end
 
 -- Start password reset
-function user:resetPassword( email )
+function user:resetPassword(email)
     --get user in question
     local user = self.db:select(
         self.config.dbprefix .. 'user', true,
         { email = email }
-    )
-    if not ( user and user[1] ) then
+   )
+    if not (user and user[1]) then
         return false, 'No users linked to this email'
     end
 
     --generate temporary reset key password_reset_key
-    local password_reset_key = self:generateKey( self.utils.randomString( 32 ))
+    local password_reset_key = self:generateKey(self.utils.randomString(32))
 
     --add key + time to database
     local status, err = self.db:update(
@@ -68,7 +68,7 @@ function user:resetPassword( email )
             password_reset_time = os.time() + 900 --15 mins
         },
         { id = user[1].id }
-    )
+   )
     if not status then return false, err end
 
     --app must send email with key link
@@ -76,13 +76,13 @@ function user:resetPassword( email )
 end
 
 -- Process reset password
-function user:resetPasswordLogin( email, key )
+function user:resetPasswordLogin(email, key)
     --check key+email
     local user = self.db:select(
         self.config.dbprefix .. 'user', true,
         { email = email, password_reset_key = key }
-    )
-    if not ( user and user[1] ) or user[1].password_reset_time < os.time() then
+   )
+    if not (user and user[1]) or user[1].password_reset_time < os.time() then
         return false, 'No email/key combination found'
     end
 
@@ -94,24 +94,24 @@ function user:resetPasswordLogin( email, key )
             password_reset_time = 0 --15 mins
         },
         { id = user[1].id }
-    )
+   )
     if not status then return false, err end
 
     --login the user with their OLD/current password, app should redirect to settings/changepw page
-    return self:login( email, user[1].password, true )
+    return self:login(email, user[1].password, true)
 end
 
 -- Register a user
-function user:register( email, password, name, group )
+function user:register(email, password, name, group)
     if not name then name = 'Unknown' end
     if password == '' then return false, 'Invalid password' end
-    if not self.utils.isEmail( email ) then return false, 'Invalid email' end
+    if not self.utils.isEmail(email) then return false, 'Invalid email' end
 
     --salt & key
-    local salt, key = self.utils.randomString( 32 ), self:generateKey( password )
+    local salt, key = self.utils.randomString(32), self:generateKey(password)
 
     --hash password
-    password = self:generatePassword( password, salt )
+    password = self:generatePassword(password, salt)
 
     --default fields & users
     local fields = { 'email', 'password', 'salt', 'name', 'register_time' }
@@ -119,14 +119,14 @@ function user:register( email, password, name, group )
 
     --generate n keys
     for i = 1, self.config.keys do
-        table.insert( fields, 'key' .. i )
-        table.insert( user, self:generateKey( password ) )
+        table.insert(fields, 'key' .. i)
+        table.insert(user, self:generateKey(password))
     end
 
     --group?
     if group then
-        table.insert( fields, 'group' )
-        table.insert( user, group )
+        table.insert(fields, 'group')
+        table.insert(user, group)
     end
 
     --insert user
@@ -134,23 +134,23 @@ function user:register( email, password, name, group )
         self.config.dbprefix .. 'user',
         fields,
         { user }
-    )
+   )
 
     --success?
     if not err then return true else return false, err end
 end
 
 -- Login a user
-function user:login( email, password, hashed )
+function user:login(email, password, hashed)
     --get user
     local user, err = self.db:select(
         self.config.dbprefix .. 'user', '*',
         { email = email }
-    )
+   )
 
     --if user hash the password w/ salt
     if user and user[1] then
-        if not hashed then password = self:generatePassword( password, user[1].salt ) end
+        if not hashed then password = self:generatePassword(password, user[1].salt) end
     else
         return false, err
     end
@@ -165,18 +165,18 @@ function user:login( email, password, hashed )
         --reload key?
         if self.config.reload_key then
             for i = 1, self.config.keys do
-                local key = self:generateKey( self.utils.randomString( 32 ) )
+                local key = self:generateKey(self.utils.randomString(32))
                 ngx.ctx.user['key' .. i] = key
                 update['key' .. i] = key
             end
         end
 
         --update user
-        self:setData( update )
+        self:setData(update)
 
         --set key cookies
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
+            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
@@ -193,7 +193,7 @@ function user:logout()
         for i = 1, self.config.keys do
             update['key' .. i] = ''
         end
-        self:setData( update )
+        self:setData(update)
     end
 
     --delete user if there
@@ -201,7 +201,7 @@ function user:logout()
 
     --delete key cookies
     for i = 1, self.config.keys do
-        self.head:deleteCookie( self.config.prefix .. 'key' .. i )
+        self.head:deleteCookie(self.config.prefix .. 'key' .. i)
     end
 
     --always succeeds
@@ -215,20 +215,20 @@ function user:checkLogin()
     --build db where table + shm key
     local wheres, key = {}, ''
     for i = 1, self.config.keys do
-        local bit = self.head:getCookie( self.config.prefix .. 'key' .. i )
+        local bit = self.head:getCookie(self.config.prefix .. 'key' .. i)
         if not bit then return false end
         wheres['key' .. i] = bit
         key = key .. bit
     end
 
     --try to get data from shm
-    local user, err = json.decode( ngx.shared[luawa.shm_prefix .. 'user']:get( key ))
+    local user, err = json.decode(ngx.shared[luawa.shm_prefix .. 'user']:get(key))
     if not err then
         ngx.ctx.user = user
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
+            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
@@ -240,17 +240,17 @@ function user:checkLogin()
         wheres,
         { order = 'id ASC' },
         1
-    )
+   )
 
     --do we have a user?
     if user and user[1] then
         --set shared data
-        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( user[1] ))
+        ngx.shared[luawa.shm_prefix .. 'user']:set(key, json.encode(user[1]))
         ngx.ctx.user = user[1]
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie( self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire )
+            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
@@ -260,25 +260,25 @@ function user:checkLogin()
 end
 
 -- Check permission
-function user:checkPermission( permission )
+function user:checkPermission(permission)
     if not self:checkLogin() then return false end
     if ngx.ctx.user.group == self.config.super then return true end
     if not ngx.ctx.user.permissions then ngx.ctx.user.permissions = {} end
     if ngx.ctx.user.permissions[permission] ~= nil then return ngx.ctx.user.permissions[permission] end
 
     --try to get shm permission
-    local data, err = ngx.shared[luawa.shm_prefix .. 'user']:get( 'permission_' .. ngx.ctx.user.id .. '_' .. permission:lower() )
+    local data, err = ngx.shared[luawa.shm_prefix .. 'user']:get('permission_' .. ngx.ctx.user.id .. '_' .. permission:lower())
     if data ~= nil then
         return data
     end
 
     --sql query to check
-    local check = self.db:query( [[
+    local check = self.db:query([[
 SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
 WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
 AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
 AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. ngx.ctx.user.group
-    )
+   )
 
     --permission?
     if check[1] then
@@ -288,7 +288,7 @@ AND ]] .. self.config.dbprefix .. [[user_groups.id = ]] .. ngx.ctx.user.group
     end
 
     --set for remainder of request + return
-    ngx.shared[luawa.shm_prefix .. 'user']:set( 'permission_' .. ngx.ctx.user.id .. '_' .. permission:lower(), data )
+    ngx.shared[luawa.shm_prefix .. 'user']:set('permission_' .. ngx.ctx.user.id .. '_' .. permission:lower(), data)
     ngx.ctx.user.permissions[permission] = data
     return data
 end
@@ -300,7 +300,7 @@ function user:getData()
 end
 
 -- Set data
-function user:setData( fields )
+function user:setData(fields)
     if not self:checkLogin() then return false end
     --password?
     if fields.password then
@@ -308,17 +308,17 @@ function user:setData( fields )
         if fields.password == '' then
             fields.password = nil
         else
-            fields.password = self:generatePassword( fields.password, self:getData().salt )
+            fields.password = self:generatePassword(fields.password, self:getData().salt)
         end
     end
     --get database result
     local result, err = self.db:update(
         self.config.dbprefix .. 'user', fields,
         { id = ngx.ctx.user.id }
-    )
+   )
     --if ok set data
     if result then
-        for k, v in pairs( fields ) do
+        for k, v in pairs(fields) do
             ngx.ctx.user[k] = v
         end
         --build shared key
@@ -327,7 +327,7 @@ function user:setData( fields )
             key = key .. ngx.ctx.user['key' .. i]
         end
         --overwrite shared data
-        ngx.shared[luawa.shm_prefix .. 'user']:set( key, json.encode( ngx.ctx.user ))
+        ngx.shared[luawa.shm_prefix .. 'user']:set(key, json.encode(ngx.ctx.user))
     end
     return result, err
 end

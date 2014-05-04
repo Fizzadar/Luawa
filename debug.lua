@@ -8,7 +8,7 @@ local type = type
 local tostring = tostring
 local tonumber = tonumber
 local lua_debug = debug
-local ffi = require( 'ffi' )
+local ffi = require('ffi')
 local luawa = luawa
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
@@ -23,10 +23,10 @@ ffi.cdef([[
 
   int gettimeofday(struct timeval* t, void* tzp);
 ]])
-local gettimeofday_struct = ffi.new( 'timeval' )
+local gettimeofday_struct = ffi.new('timeval')
 local function gettimeofday()
-   ffi.C.gettimeofday( gettimeofday_struct, nil )
-   return tonumber( gettimeofday_struct.tv_sec ) * 1000000 + tonumber( gettimeofday_struct.tv_usec )
+   ffi.C.gettimeofday(gettimeofday_struct, nil)
+   return tonumber(gettimeofday_struct.tv_sec) * 1000000 + tonumber(gettimeofday_struct.tv_usec)
 end
 
 local debug = {
@@ -48,14 +48,14 @@ function debug:_start()
         ngx.ctx.time = gettimeofday()
         ngx.ctx.start_time = ngx.ctx.time
 
-        lua_debug.sethook( function( event, line )
+        lua_debug.sethook(function(event, line)
             local time = gettimeofday()
-            local time_diff = ( time - ngx.ctx.time ) / 1000
+            local time_diff = (time - ngx.ctx.time) / 1000
 
-            local info = lua_debug.getinfo( 2 )
-            local a, b, path = info.source:find( '^@' .. luawa.root .. '([^%s]+)$' )
+            local info = lua_debug.getinfo(2)
+            local a, b, path = info.source:find('^@' .. luawa.root .. '([^%s]+)$')
             if not path then
-                local a, b, func_name = info.source:find( '^--luawa_file:([^\n]+)' )
+                local a, b, func_name = info.source:find('^--luawa_file:([^\n]+)')
                 path = func_name and func_name .. '.lhtml' or 'unknown'
             end
 
@@ -85,7 +85,7 @@ function debug:_start()
             end
 
             ngx.ctx.time = gettimeofday()
-        end, 'l' )
+        end, 'l')
     end
 end
 
@@ -97,7 +97,7 @@ function debug:_end()
     --include debug?
     if self.config.enabled then
         --first work out total request time (including most debug stuff)
-        local all_time = ( gettimeofday() - ngx.ctx.start_time ) / 1000
+        local all_time = (gettimeofday() - ngx.ctx.start_time) / 1000
 
         --remove debug hook
         lua_debug.sethook()
@@ -105,9 +105,9 @@ function debug:_end()
 
         --work out stack
         local stack, app_time, luawa_time = {}, 0, 0
-        for file, data in pairs( ngx.ctx.stack ) do
-            if file:find( '^luawa/[^%/]+%.lua$' ) then
-                for name, func in pairs( data.funcs ) do
+        for file, data in pairs(ngx.ctx.stack) do
+            if file:find('^luawa/[^%/]+%.lua$') then
+                for name, func in pairs(data.funcs) do
                     if name ~= 'unknown' then
                         luawa_time = luawa_time + func.time
                     end
@@ -115,96 +115,96 @@ function debug:_end()
             end
 
             local funcs = {}
-            for k, v in pairs( data.funcs ) do
-                table.insert( funcs, { name = k, lines = v.lines, time = v.time })
+            for k, v in pairs(data.funcs) do
+                table.insert(funcs, { name = k, lines = v.lines, time = v.time })
             end
-            table.sort( funcs, function( a, b ) return a.time > b.time end )
+            table.sort(funcs, function(a, b) return a.time > b.time end)
             data.funcs = funcs
 
             local line_counts = {}
-            for k, v in pairs( data.line_counts ) do
-                table.insert( line_counts, { line = k - 1, count = v.count, time = v.time })
+            for k, v in pairs(data.line_counts) do
+                table.insert(line_counts, { line = k - 1, count = v.count, time = v.time })
             end
-            table.sort( line_counts, function( a, b ) return a.time > b.time end )
+            table.sort(line_counts, function(a, b) return a.time > b.time end)
             data.line_counts = line_counts
 
-            table.insert( stack, { file = file, data = data })
+            table.insert(stack, { file = file, data = data })
             app_time = app_time + data.time
         end
-        table.sort( stack, function( a, b ) return a.data.time > b.data.time end )
+        table.sort(stack, function(a, b) return a.data.time > b.data.time end)
         --work out how long debug took
         local debug_time = all_time - app_time - luawa_time
 
         --count caches
         local cached_templates, cached_files = 0, 0
         if luawa.cache then
-            for _, _ in pairs( luawa.cache ) do
+            for _, _ in pairs(luawa.cache) do
                 cached_files = cached_files + 1
             end
-            for _, _ in pairs( luawa.template.cache ) do
+            for _, _ in pairs(luawa.template.cache) do
                 cached_templates = cached_templates + 1
             end
         end
 
         --add logs, then template data, then stack
-        template:set( 'debug_data', luawa.utils.tableCopy( ngx.ctx.data ))
-        template:set( 'debug_logs', ngx.ctx.logs )
-        template:set( 'debug_stack', stack )
-        template:set( 'debug_app_time', app_time, true )
-        template:set( 'debug_luawa_time', luawa_time, true )
-        template:set( 'debug_debug_time', debug_time, true )
-        template:set( 'debug_request_time', app_time + luawa_time, true )
-        template:set( 'debug_cached_files', cached_files )
-        template:set( 'debug_cached_templates', cached_templates )
+        template:set('debug_data', luawa.utils.tableCopy(ngx.ctx.data))
+        template:set('debug_logs', ngx.ctx.logs)
+        template:set('debug_stack', stack)
+        template:set('debug_app_time', app_time, true)
+        template:set('debug_luawa_time', luawa_time, true)
+        template:set('debug_debug_time', debug_time, true)
+        template:set('debug_request_time', app_time + luawa_time, true)
+        template:set('debug_cached_files', cached_files)
+        template:set('debug_cached_templates', cached_templates)
 
         --versions
-        local a, b, v1, v2, v3 = tostring( ngx.config.nginx_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
+        local a, b, v1, v2, v3 = tostring(ngx.config.nginx_version):find('([1-9]*)[0]*([1-9]+)[0]+([1-9]+)')
         v1 = v1:len() > 0 and v1 or 0
         v2 = v2:len() > 0 and v2 or 0
-        template:set( 'nginx_version', v1 .. '.' .. v2 .. '.' .. v3, true )
-        local a, b, v1, v2, v3 = tostring( ngx.config.ngx_lua_version ):find( '([1-9]*)[0]*([1-9]+)[0]+([1-9]+)' )
+        template:set('nginx_version', v1 .. '.' .. v2 .. '.' .. v3, true)
+        local a, b, v1, v2, v3 = tostring(ngx.config.ngx_lua_version):find('([1-9]*)[0]*([1-9]+)[0]+([1-9]+)')
         v1 = v1:len() > 0 and v1 or 0
         v2 = v2:len() > 0 and v2 or 0
-        template:set( 'nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3, true )
+        template:set('nginx_lua_version', v1 .. '.' .. v2 .. '.' .. v3, true)
 
         --load debug template
         local old_dir, old_minimize = template.config.dir, template.config.minimize
         template.config.dir = 'luawa/'
         template.config.minimize = false
-        template:load( 'debug' )
+        template:load('debug')
         template.config.dir, template.config.minimize = old_dir, old_minimize
     end
 end
 
 -- Basic debug message
-function debug:message( message )
+function debug:message(message)
     if self.config.enabled then
-        table.insert( ngx.ctx.logs.messages, { text = message })
+        table.insert(ngx.ctx.logs.messages, { text = message })
     end
 end
 
 -- Basic error message
-function debug:error( message )
+function debug:error(message)
     if self.config.enabled then
-        table.insert( ngx.ctx.logs.errors, { text = message, stack = lua_debug.traceback() })
+        table.insert(ngx.ctx.logs.errors, { text = message, stack = lua_debug.traceback() })
     end
 end
 
 -- Query message
-function debug:query( message )
+function debug:query(message)
     if self.config.enabled then
-        table.insert( ngx.ctx.logs.queries, { text = message })
+        table.insert(ngx.ctx.logs.queries, { text = message })
     end
 end
 
 -- Access message
-function debug:access( message, request )
-    if type( request ) == 'table' then
-        message = message .. 'URL: ' .. request.hostname .. request.path .. ' / IP: ' .. request.user_ip .. ' / UserAgent: ' .. tostring( request.user_agent )
+function debug:access(message, request)
+    if type(request) == 'table' then
+        message = message .. 'URL: ' .. request.hostname .. request.path .. ' / IP: ' .. request.user_ip .. ' / UserAgent: ' .. tostring(request.user_agent)
     end
 
     if self.config.enabled then
-        table.insert( ngx.ctx.logs.messages, { text = message })
+        table.insert(ngx.ctx.logs.messages, { text = message })
     end
 end
 

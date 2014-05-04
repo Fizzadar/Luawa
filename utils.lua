@@ -6,21 +6,21 @@ local type = type
 local tostring = tostring
 local pairs = pairs
 local string = string
-local json = require( 'cjson.safe' )
-local hasher = require( luawa.root .. 'luawa/lib/sha512' )
-local random = require( luawa.root .. 'luawa/lib/random' )
-local str = require( luawa.root .. 'luawa/lib/string' )
+local json = require('cjson.safe')
+local hasher = require(luawa.root .. 'luawa/lib/sha512')
+local random = require(luawa.root .. 'luawa/lib/random')
+local str = require(luawa.root .. 'luawa/lib/string')
 local luawa = luawa
 
 local utils = {}
 
 -- Copy/duplicate a table
-function utils.tableCopy( table )
-    local function tableCopy( table )
+function utils.tableCopy(table)
+    local function tableCopy(table)
         local copy = {}
-        for k, v in pairs( table ) do
-            if type( v ) == 'table' then
-                copy[k] = tableCopy( v )
+        for k, v in pairs(table) do
+            if type(v) == 'table' then
+                copy[k] = tableCopy(v)
             else
                 copy[k] = v
             end
@@ -29,38 +29,38 @@ function utils.tableCopy( table )
         return copy
     end
 
-    return tableCopy( table )
+    return tableCopy(table)
 end
 
 -- Return tables and any number of sub-tables as a string
-function utils.tableString( table, level )
-    local function tableString( table, level )
+function utils.tableString(table, level)
+    local function tableString(table, level)
         --not a table?
-        if type( table ) ~= 'table' then return tostring( table ) end
+        if type(table) ~= 'table' then return tostring(table) end
 
         local str = ''
         local table, level = table or {}, level or 0
 
         --loop through the table
-        for k, v in pairs( table ) do
+        for k, v in pairs(table) do
             for i = 0, level do
                 k = ' ' .. k
             end
-            str = str .. '\n' .. k .. ' = ' .. tostring( v )
-            if type( v ) == 'table' then
-                str = str .. tableString( v, level + 4 )
+            str = str .. '\n' .. k .. ' = ' .. tostring(v)
+            if type(v) == 'table' then
+                str = str .. tableString(v, level + 4)
             end
         end
 
         return str
     end
 
-    return tableString( table, level )
+    return tableString(table, level)
 end
 
 -- Checks if a table has a list of keys
-function utils.tableKeys( table, keys )
-    for k, v in pairs( keys ) do
+function utils.tableKeys(table, keys)
+    for k, v in pairs(keys) do
         if not table[v] then return false end
     end
 
@@ -68,7 +68,7 @@ function utils.tableKeys( table, keys )
 end
 
 -- HTML => entities
-function utils.htmlEnts( str )
+function utils.htmlEnts(str)
     local entities = {
         ['¡'] = '&iexcl;',
         ['¢'] = '&cent;',
@@ -171,87 +171,87 @@ function utils.htmlEnts( str )
         ['>'] = '&gt;',
         ['&'] = '&amp;'
     }
-    str = str:gsub( '.', function( v )
+    str = str:gsub('.', function(v)
         if entities[v] then return entities[v] else return v end
-    end )
+    end)
     return str
 end
 
 -- Alphanumeric-ify string
-function utils.alphaNumerify( str )
-    return str:gsub( '%W', '' )
+function utils.alphaNumerify(str)
+    return str:gsub('%W', '')
 end
 
 -- Capitalize first character
-function utils.capitalizeFirst( str )
-    return str:gsub( '^%l', string.upper )
+function utils.capitalizeFirst(str)
+    return str:gsub('^%l', string.upper)
 end
 
 -- Check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
-function utils.isEmail( str )
-    if str:match( '@' ) then
+function utils.isEmail(str)
+    if str:match('@') then
         return true
     end
 end
 
 -- Check an url
-function utils.isUrl( str )
-    if str:match( '^https?://' ) then
+function utils.isUrl(str)
+    if str:match('^https?://') then
         return true
     end
 end
 
 -- Trim string
-function utils.trim( str, chars )
+function utils.trim(str, chars)
     if not chars then chars = '%s' end
-    return str:match( '^[' .. chars .. ']*(.-)[' .. chars .. ']*$' )
+    return str:match('^[' .. chars .. ']*(.-)[' .. chars .. ']*$')
 end
 
 -- Trim right string (remove chars from right end)
-function utils.trimRight( str, chars )
+function utils.trimRight(str, chars)
     if not chars then chars = '%s' end
-    return str:match( '^(.-)[' .. chars .. ']*$' )
+    return str:match('^(.-)[' .. chars .. ']*$')
 end
 
 -- Trim left string (remove chars from left end)
-function utils.trimLeft( str, chars )
+function utils.trimLeft(str, chars)
     if not chars then chars = '%s' end
-    return str:match( '^[' .. chars .. ']*(.-)$' )
+    return str:match('^[' .. chars .. ']*(.-)$')
 end
 
 -- Random string
-function utils.randomString( length )
-    return str.to_hex( random.bytes( length ) )
+function utils.randomString(length)
+    return str.to_hex(random.bytes(length))
 end
 
 -- Digest (sha512)
-function utils.digest( string )
+function utils.digest(string)
     local sha = hasher:new()
-    sha:update( string )
-    return str.to_hex( sha:final() )
+    sha:update(string)
+    return str.to_hex(sha:final())
 end
 
 -- URL decode
-function utils.urlDecode( str )
-    return ngx.unescape_uri( str )
+function utils.urlDecode(str)
+    return ngx.unescape_uri(str)
 end
 
 -- URL encode
-function utils.urlEncode( str )
-    return ngx.escape_uri( str )
+function utils.urlEncode(str)
+    return ngx.escape_uri(str)
 end
 
 -- JSON Prepare
-function utils.jsonPrepare( object )
-    local function prepare( object )
-        local out, type = {}, type( object )
+function utils.jsonPrepare(object)
+    local function prepare(object)
+        local out, type = {}, type(object)
         if type == 'table' then
-            for k, v in pairs( object ) do
-                out[k] = prepare( v )
+            for k, v in pairs(object) do
+                out[k] = prepare(v)
             end
         else
             if type == 'function' then
-                out = tostring( object )
+                out = tostring(object)
             else
                 out = object
             end
@@ -260,29 +260,29 @@ function utils.jsonPrepare( object )
         return out
     end
 
-    return prepare( object )
+    return prepare(object)
 end
 
 -- JSON Encode
-function utils.jsonEncode( object )
-    return json.encode( utils.jsonPrepare( object ))
+function utils.jsonEncode(object)
+    return json.encode(utils.jsonPrepare(object))
 end
 
 -- JSON decode
-function utils.jsonDecode( str )
-    return json.decode( utils.jsonPrepare( str ))
+function utils.jsonDecode(str)
+    return json.decode(utils.jsonPrepare(str))
 end
 
 -- Explode, credit: http://richard.warburton.it
-function utils.explode( str, divide )
+function utils.explode(str, divide)
     local pos, arr = 0, {}
 
     --for each divider found
-    for st, sp in ( function() return str:find( divide, pos, true ) end ) do
-        table.insert( arr, str:sub( pos, st - 1 )) --attach chars left of current divider
+    for st, sp in (function() return str:find(divide, pos, true) end) do
+        table.insert(arr, str:sub(pos, st - 1)) --attach chars left of current divider
         pos = sp + 1 --jump past current divider
     end
-    table.insert( arr, str:sub( pos )) -- Attach chars right of last divider
+    table.insert(arr, str:sub(pos)) -- Attach chars right of last divider
 
     return arr
 end

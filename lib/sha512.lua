@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 ]]
 
 local luawa = luawa
-local sha = require( luawa.root .. "luawa/lib/sha" )
+local sha = require(luawa.root .. "luawa/lib/sha")
 local ffi = require "ffi"
 local ffi_new = ffi.new
 local ffi_str = ffi.string

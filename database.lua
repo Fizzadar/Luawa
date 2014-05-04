@@ -8,7 +8,7 @@ local table = table
 local tostring = tostring
 local ngx = ngx
 local luawa = luawa
-local mysql = require( luawa.root .. 'luawa/lib/mysql' )
+local mysql = require(luawa.root .. 'luawa/lib/mysql')
 
 local database = {
     config = {
@@ -31,15 +31,15 @@ function database:_end()
 end
 
 -- Clean table data (wheres or values) <= only things with user input
-function database:escape( data )
-    if not self:connect() or type( data ) ~= 'table' then return {} end
+function database:escape(data)
+    if not self:connect() or type(data) ~= 'table' then return {} end
 
     local clean_data = {}
-    for k, v in pairs( data ) do
-        if type( v ) == 'table' then
-            clean_data[k] = self:escape( v )
+    for k, v in pairs(data) do
+        if type(v) == 'table' then
+            clean_data[k] = self:escape(v)
         else
-            clean_data[k] = ngx.quote_sql_str( v )
+            clean_data[k] = ngx.quote_sql_str(v)
         end
     end
 
@@ -72,7 +72,7 @@ function database:connect()
 end
 
 -- Run a manual/raw query
-function database:query( sql )
+function database:query(sql)
     --check we're connected already
     if not ngx.ctx.db then
         local status, err = self:connect()
@@ -80,69 +80,69 @@ function database:query( sql )
     end
 
     --run query
-    local data, err = ngx.ctx.db:query( sql )
+    local data, err = ngx.ctx.db:query(sql)
 
     --borked sql?
     if not data then
-        luawa.debug:error( 'Mysql error: ' .. err .. '\n' .. sql )
+        luawa.debug:error('Mysql error: ' .. err .. '\n' .. sql)
         return {}, err
     end
 
     --message
-    luawa.debug:query( sql )
+    luawa.debug:query(sql)
 
     --return results (data.insert_id, data.affected_rows and #data)
     return data
 end
 
 -- Turn table into WHERE's statement
-function database:wheresToSql( wheres )
+function database:wheresToSql(wheres)
     local where_bits = {}
 
     if wheres then
         --where
-        wheres = self:escape( wheres )
+        wheres = self:escape(wheres)
         --loop them
-        for k, v in pairs( wheres ) do
+        for k, v in pairs(wheres) do
             if v.sign and v[1] then
-                v.sign = self.utils.trim( v.sign, '%\'' )
-                table.insert( where_bits, '`' .. k .. '` ' .. v.sign .. ' ' .. v[1] .. '\n' )
-            elseif type( v ) ~= 'table' then
-                table.insert( where_bits, '`' .. k .. '` = ' .. v .. '\n' )
+                v.sign = self.utils.trim(v.sign, '%\'')
+                table.insert(where_bits, '`' .. k .. '` ' .. v.sign .. ' ' .. v[1] .. '\n')
+            elseif type(v) ~= 'table' then
+                table.insert(where_bits, '`' .. k .. '` = ' .. v .. '\n')
             else
                 local bits, string = {}, '('
-                for c, d in ipairs( v ) do
-                    table.insert( bits, '`' .. k .. '` = ' .. d )
+                for c, d in ipairs(v) do
+                    table.insert(bits, '`' .. k .. '` = ' .. d)
                     v[c] = nil
                 end
-                for c, d in pairs( v ) do
-                    table.insert( bits, '`' .. c .. '` = ' .. d )
+                for c, d in pairs(v) do
+                    table.insert(bits, '`' .. c .. '` = ' .. d)
                 end
-                string = string .. table.concat( bits, ' OR ' ) .. ')\n'
-                table.insert( where_bits, string )
+                string = string .. table.concat(bits, ' OR ') .. ')\n'
+                table.insert(where_bits, string)
             end
         end
     end
 
     if #where_bits > 0 then
-        return 'WHERE ' .. table.concat( where_bits, ' AND ' )
+        return 'WHERE ' .. table.concat(where_bits, ' AND ')
     end
 
     return ''
 end
 
 -- Run a select request (build query + run)
-function database:select( table_name, fields, wheres, options )
+function database:select(table_name, fields, wheres, options)
     options = options or {}
     options.select = options.select and ', ' .. options.select or ''
     local sql
 
     --table & fields
-    local fields = type( fields ) == 'table' and '' .. table.concat( fields, ', ' ) .. '' .. options.select or '*'
+    local fields = type(fields) == 'table' and '' .. table.concat(fields, ', ') .. '' .. options.select or '*'
     sql = 'SELECT ' .. fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
 
     --wheres
-    sql = sql .. self:wheresToSql( wheres )
+    sql = sql .. self:wheresToSql(wheres)
 
     --group
     if options.group then sql = sql .. ' GROUP BY ' .. options.group end
@@ -153,49 +153,49 @@ function database:select( table_name, fields, wheres, options )
     --offset
     if options.offset then sql = sql .. ' OFFSET ' .. options.offset end
 
-    return self:query( sql )
+    return self:query(sql)
 end
 
 -- Run a delete request
-function database:delete( table_name, wheres, limit )
+function database:delete(table_name, wheres, limit)
     local sql
 
     --table
     sql = 'DELETE FROM ' .. self.config.prefix .. table_name .. ' '
 
     --wheres
-    sql = sql .. self:wheresToSql( wheres )
+    sql = sql .. self:wheresToSql(wheres)
 
     --limit
     if limit then sql = sql .. ' LIMIT ' .. limit end
 
-    return self:query( sql )
+    return self:query(sql)
 end
 
 -- Run a update request
-function database:update( table_name, values, wheres )
+function database:update(table_name, values, wheres)
     local sql
 
     --escape input values
-    values = self:escape( values )
+    values = self:escape(values)
 
     --table
     sql = 'UPDATE ' .. self.config.prefix .. table_name .. ' '
     --sets
     sql = sql .. 'SET '
     local bits = {}
-    for k, v in pairs( values ) do
-        table.insert( bits, '`' .. k .. '` = ' .. v )
+    for k, v in pairs(values) do
+        table.insert(bits, '`' .. k .. '` = ' .. v)
     end
-    sql = sql .. table.concat( bits, ', ' )
+    sql = sql .. table.concat(bits, ', ')
 
     --wheres
-    sql = sql .. self:wheresToSql( wheres )
-    return self:query( sql )
+    sql = sql .. self:wheresToSql(wheres)
+    return self:query(sql)
 end
 
 -- Run a insert request
-function database:insert( table_name, fields, values, options )
+function database:insert(table_name, fields, values, options)
     options = options or {}
     local sql, value
     local cmd = 'INSERT'
@@ -203,30 +203,30 @@ function database:insert( table_name, fields, values, options )
     if options.delayed then cmd = 'INSERT DELAYED' end
 
     --escape input values
-    values = self:escape( values )
+    values = self:escape(values)
 
     --table
     sql = cmd .. ' INTO ' .. self.config.prefix .. table_name .. ' '
     --fields
-    sql = sql .. '( `' .. table.concat( fields, '`, `' ) .. '` ) VALUES '
+    sql = sql .. '(`' .. table.concat(fields, '`, `') .. '`) VALUES '
     --values
     local bits = {}
-    for k, v in pairs( values ) do
-        table.insert( bits, '( ' .. table.concat( v, ', ' ) .. ' )' )
+    for k, v in pairs(values) do
+        table.insert(bits, '(' .. table.concat(v, ', ') .. ')')
     end
-    sql = sql .. table.concat( bits, ', ' )
+    sql = sql .. table.concat(bits, ', ')
 
-    return self:query( sql )
+    return self:query(sql)
 end
 
 -- Run a search request
-function database:search( table_name, search_fields, fetch_fields, query )
+function database:search(table_name, search_fields, fetch_fields, query)
     local sql
 
     sql = 'SELECT (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) AS score, ' .. fetch_fields .. ' FROM ' .. self.config.prefix .. table_name .. '\n'
     sql = sql .. 'WHERE (MATCH(' .. search_fields .. ') AGAINST("' .. query .. '")) > 0'
 
-    return self:query( sql )
+    return self:query(sql)
 end
 
 

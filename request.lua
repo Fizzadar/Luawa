@@ -16,35 +16,35 @@ end
 function request:_start()
     --bind .get => ngx uri args
     local mt = {
-        __index = function( table, key )
+        __index = function(table, key)
             local args = ngx.req.get_uri_args()
             return args[key]
         end
     }
     self.get = {}
-    setmetatable( self.get, mt )
+    setmetatable(self.get, mt)
 
     --read post data/args
     ngx.req.read_body()
     --bind .post => ngx post args
     local mt = {
-        __index = function( table, key )
-            local args = ngx.req.get_post_args( luawa.limit_post )
+        __index = function(table, key)
+            local args = ngx.req.get_post_args(luawa.limit_post)
             return args[key]
         end
     }
     self.post = {}
-    setmetatable( self.post, mt )
+    setmetatable(self.post, mt)
 
     --bind .other_bits
     local mt = {
-        __index = function( table, key )
+        __index = function(table, key)
             if key == 'method' then
                 return ngx.req.get_method()
             end
             if key == 'hostname' or key == 'hostport' then
                 local header = ngx.req.get_headers().host
-                local a, b, host, port = header:find( '^([^:]+):?([0-9]*)$' )
+                local a, b, host, port = header:find('^([^:]+):?([0-9]*)$')
                 return key == 'hostname' and host or port
             end
             if key == 'remote_addr' then
@@ -52,7 +52,7 @@ function request:_start()
             end
         end
     }
-    setmetatable( self, mt )
+    setmetatable(self, mt)
 end
 
 -- Get all GETs
