@@ -25,6 +25,7 @@ local template = {
 function template:_init()
     self.utils = luawa.utils
     self.session = luawa.session
+    self.request = luawa.request
 end
 
 -- Start function
@@ -53,7 +54,7 @@ function template:_end()
         end
         clean(self.data)
 
-        luawa.header:setHeader('Content-Type', 'text/json')
+        self.request:setHeader('Content-Type', 'text/json')
         self:set('messages', luawa.session:getMessages(), true)
         local out, err = self.utils.json_encode(ngx.ctx.data)
         if out then
