@@ -112,8 +112,13 @@ function request:redirect(url, message_type, message_text)
 end
 
 
+local function newindex()
+    return luawa:error('App error: you cannot change request data')
+end
+
 --bind .get => ngx uri args
 local mt = {
+    __newindex = newindex,
     __index = function(table, key)
         return ngx.req.get_uri_args()[key] or nil
     end
@@ -122,6 +127,7 @@ setmetatable(request.get, mt)
 
 --bind .post => ngx post args
 local mt = {
+    __newindex = newindex,
     __index = function(table, key)
         return ngx.req.get_post_args(luawa.limit_post)[key] or nil
     end
@@ -130,6 +136,7 @@ setmetatable(request.post, mt)
 
 --bind .header => ngx header args
 local mt = {
+    __newindex = newindex,
     __index = function(table, key)
         return ngx.req.get_headers()[key] or nil
     end
@@ -138,6 +145,7 @@ setmetatable(request.header, mt)
 
 --bind .cookie => ngx cookie args
 local mt = {
+    __newindex = newindex,
     __index = function(table, key)
         return ngx.ctx.cookies[key] or nil
     end
@@ -146,6 +154,7 @@ setmetatable(request.cookie, mt)
 
 --bind .other_bits
 local mt = {
+    __newindex = newindex,
     __index = function(table, key)
         if key == 'method' then
             return ngx.req.get_method()
