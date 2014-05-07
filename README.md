@@ -10,7 +10,7 @@ Luawa (loo-ah-wa) is a web-application framework for [Lua+Nginx](https://github.
 + Lua cjson
 
 
-# Releases
+## Download
 
 It is _highly_ recommended you use [a release](https://github.com/Fizzadar/Luawa/releases) rather than cloning this Git repo, which contains bleeding edge/untested code.
 
