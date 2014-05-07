@@ -26,6 +26,7 @@ function template:_init()
     self.utils = luawa.utils
     self.session = luawa.session
     self.request = luawa.request
+    self.caching = luawa.caching
 end
 
 -- Start function
@@ -114,10 +115,9 @@ end
 -- Load a lhtml file, convert code to lua, run and add string to end of response.content
 function template:load(file, inline)
     if self.api then return true end
-    local cache = luawa.cache
 
     --try cache
-    if cache and self.cache[file] then
+    if self.caching and self.cache[file] then
         return self:processFunction(self.cache[file], file)
     end
 

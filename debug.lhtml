@@ -394,7 +394,7 @@
                         <th colspan="2">Cache</th>
                     </tr><tr>
                         <td>Enabled</td>
-                        <td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
+                        <td><span><? if luawa.caching then ?>true<? else ?>false<? end ?></span></td>
                     </tr><tr>
                         <td>App Files</td>
                         <td><?=self:get('debug_cached_files') ?></td>

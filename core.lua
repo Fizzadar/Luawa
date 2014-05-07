@@ -15,8 +15,10 @@ local ngx = ngx
 local luawa = {
     version = '0.9.5-unreleased',
     --base status
-    requests = ngx.shared.requests,
     init = false,
+    requests = ngx.shared.requests,
+    --function cache
+    cache = {},
     --all our modules
     modules = {
         'request',
@@ -71,11 +73,11 @@ function luawa:setConfig(root, file)
     self.requests:set('success', 0)
     self.requests:set('error', 0)
 
-    --cache?
-    self.cache = config.cache and {} or false
-
     --limit post args?
     self.limit_post = config.limit_post or 100
+
+    --caching?
+    self.caching = false
 
     --module config
     for k, v in pairs(self.modules) do
@@ -153,7 +155,7 @@ end
 -- Load a file as a function & process
 function luawa:processFile(file)
     --try cache
-    if self.cache and self.cache[file] then
+    if self.caching and self.cache[file] then
         return self:processFunction(self.cache[file], file)
     end
 
