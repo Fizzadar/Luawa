@@ -11,6 +11,7 @@ local tostring = tostring
 local io = io
 local ngx = ngx
 
+
 local luawa = {
     version = '0.9.5-unreleased',
     --base status
@@ -235,13 +236,13 @@ function luawa:error(type, message)
     self.template.config.dir, self.template.config.minimize = old_dir, old_minimize
 
     --end request & exit
-    self:endRequest()
+    self:endRequest(true)
 end
 
 -- Exit (for debug)
 function luawa:exit(object)
     ngx.say('Luawa ' .. self.version .. ' dev:')
-    ngx.say('<pre>' .. self.utils.tableString(object) .. '</pre>')
+    ngx.say('<pre>' .. self.utils.table_string(object) .. '</pre>')
 
     --end request & exit
     self:endRequest()

@@ -5,10 +5,13 @@
 local pairs = pairs
 local type = type
 local table = table
+local table_insert = table.insert
 local tostring = tostring
+
 local ngx = ngx
 local luawa = luawa
 local mysql = require(luawa.root .. 'luawa/lib/mysql')
+
 
 local database = {
     config = {
@@ -106,20 +109,20 @@ function database:wheresToSql(wheres)
         for k, v in pairs(wheres) do
             if v.sign and v[1] then
                 v.sign = self.utils.trim(v.sign, '%\'')
-                table.insert(where_bits, '`' .. k .. '` ' .. v.sign .. ' ' .. v[1] .. '\n')
+                table_insert(where_bits, '`' .. k .. '` ' .. v.sign .. ' ' .. v[1] .. '\n')
             elseif type(v) ~= 'table' then
-                table.insert(where_bits, '`' .. k .. '` = ' .. v .. '\n')
+                table_insert(where_bits, '`' .. k .. '` = ' .. v .. '\n')
             else
                 local bits, string = {}, '('
                 for c, d in ipairs(v) do
-                    table.insert(bits, '`' .. k .. '` = ' .. d)
+                    table_insert(bits, '`' .. k .. '` = ' .. d)
                     v[c] = nil
                 end
                 for c, d in pairs(v) do
-                    table.insert(bits, '`' .. c .. '` = ' .. d)
+                    table_insert(bits, '`' .. c .. '` = ' .. d)
                 end
                 string = string .. table.concat(bits, ' OR ') .. ')\n'
-                table.insert(where_bits, string)
+                table_insert(where_bits, string)
             end
         end
     end
@@ -185,7 +188,7 @@ function database:update(table_name, values, wheres)
     sql = sql .. 'SET '
     local bits = {}
     for k, v in pairs(values) do
-        table.insert(bits, '`' .. k .. '` = ' .. v)
+        table_insert(bits, '`' .. k .. '` = ' .. v)
     end
     sql = sql .. table.concat(bits, ', ')
 
@@ -212,7 +215,7 @@ function database:insert(table_name, fields, values, options)
     --values
     local bits = {}
     for k, v in pairs(values) do
-        table.insert(bits, '(' .. table.concat(v, ', ') .. ')')
+        table_insert(bits, '(' .. table.concat(v, ', ') .. ')')
     end
     sql = sql .. table.concat(bits, ', ')
 

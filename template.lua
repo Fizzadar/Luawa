@@ -9,8 +9,10 @@ local loadstring = loadstring
 local type = type
 local table = table
 local io = io
+
 local ngx = ngx
 local luawa = luawa
+
 
 local template = {
     config = {
@@ -53,11 +55,11 @@ function template:_end()
 
         luawa.header:setHeader('Content-Type', 'text/json')
         self:set('messages', luawa.session:getMessages(), true)
-        local out, err = self.utils.jsonEncode(ngx.ctx.data)
+        local out, err = self.utils.json_encode(ngx.ctx.data)
         if out then
             ngx.ctx.response = out
         else
-            ngx.ctx.response = self.utils.jsonEncode({ error = err })
+            ngx.ctx.response = self.utils.json_encode({ error = err })
         end
     end
 end
@@ -163,7 +165,7 @@ function template:toString(string)
     --nil returns blank
     if string == nil then return '' end
     --string as string
-    if type(string) == 'string' then return self.utils.htmlEnts(string) end
+    if type(string) == 'string' then return self.utils.html_ents(string) end
     --otherwise as best
     return tostring(string)
 end

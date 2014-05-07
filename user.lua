@@ -5,8 +5,10 @@
 local os = os
 local table = table
 local pairs = pairs
+
 local ngx = ngx
 local json = require('cjson.safe')
+
 
 local user = {
     config = {
@@ -43,7 +45,7 @@ end
 
 -- Generate a key
 function user:generateKey(entropy)
-    return self.utils.digest(entropy .. self.utils.randomString(32))
+    return self.utils.digest(entropy .. self.utils.random_string(32))
 end
 
 -- Start password reset
@@ -58,7 +60,7 @@ function user:resetPassword(email)
     end
 
     --generate temporary reset key password_reset_key
-    local password_reset_key = self:generateKey(self.utils.randomString(32))
+    local password_reset_key = self:generateKey(self.utils.random_string(32))
 
     --add key + time to database
     local status, err = self.db:update(
@@ -105,10 +107,10 @@ end
 function user:register(email, password, name, group)
     if not name then name = 'Unknown' end
     if password == '' then return false, 'Invalid password' end
-    if not self.utils.isEmail(email) then return false, 'Invalid email' end
+    if not self.utils.is_email(email) then return false, 'Invalid email' end
 
     --salt & key
-    local salt, key = self.utils.randomString(32), self:generateKey(password)
+    local salt, key = self.utils.random_string(32), self:generateKey(password)
 
     --hash password
     password = self:generatePassword(password, salt)
@@ -165,7 +167,7 @@ function user:login(email, password, hashed)
         --reload key?
         if self.config.reload_key then
             for i = 1, self.config.keys do
-                local key = self:generateKey(self.utils.randomString(32))
+                local key = self:generateKey(self.utils.random_string(32))
                 ngx.ctx.user['key' .. i] = key
                 update['key' .. i] = key
             end

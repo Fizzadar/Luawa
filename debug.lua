@@ -8,8 +8,10 @@ local type = type
 local tostring = tostring
 local tonumber = tonumber
 local lua_debug = debug
+
 local ffi = require('ffi')
 local luawa = luawa
+
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
 --https://github.com/jgrahamc/lulip
@@ -147,7 +149,7 @@ function debug:_end()
         end
 
         --add logs, then template data, then stack
-        template:set('debug_data', luawa.utils.tableCopy(ngx.ctx.data))
+        template:set('debug_data', luawa.utils.table_copy(ngx.ctx.data))
         template:set('debug_logs', ngx.ctx.logs)
         template:set('debug_stack', stack)
         template:set('debug_app_time', app_time, true)

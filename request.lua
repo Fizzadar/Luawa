@@ -3,7 +3,9 @@
 -- Desc: holds/prepares request data (gets & posts)
 
 local setmetatable = setmetatable
+
 local ngx = ngx
+
 
 local request = {}
 

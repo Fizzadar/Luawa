@@ -150,11 +150,11 @@
                 .luawa_block h4 a.luawa_external {
                     background: white;
                     border-right: none;
-                    color: rgb( 40, 40, 137 );
+                    color: rgb(40, 40, 137);
                     padding-right: 5px;
                 }
                 .luawa_block h4 a.luawa_external:hover {
-                    color: rgb( 0, 0, 17 );
+                    color: rgb(0, 0, 17);
                 }
             .luawa_block .luawa_sublock {
                 top: 35px;
@@ -192,14 +192,14 @@
                     background: orange;
                 }
                 div.luawa_stack table tr td {
-                    background: rgb( 40, 40, 137 );
+                    background: rgb(40, 40, 137);
                     color: white;
                     cursor: pointer;
                     vertical-align: top;
                     border-top: 3px solid black;
                 }
                 div.luawa_stack table tr:hover td {
-                    background: rgb( 0, 0, 117 );
+                    background: rgb(0, 0, 117);
                 }
             div.luawa_stack table tr.luawa_small {
                 display: none;
@@ -238,8 +238,8 @@
         </h4>
 
         <div class="luawa_messages luawa_sublock">
-            <? for key, log in pairs( self:get( 'debug_logs' ) ) do ?>
-                <? for k, message in pairs( log ) do ?>
+            <? for key, log in pairs(self:get('debug_logs')) do ?>
+                <? for k, message in pairs(log) do ?>
                     <strong><?=key ?></strong>:
                     <pre><?=message.text ?></pre><br />
                     <? if message.stack then ?>
@@ -250,7 +250,7 @@
         </div>
 
         <div class="luawa_data luawa_sublock">
-            <pre><?=luawa.utils.tableString( self:get( 'debug_data' ) ) ?></pre>
+            <pre><?=luawa.utils.table_string(self:get('debug_data')) ?></pre>
         </div>
 
         <div class="luawa_stack luawa_sublock">
@@ -261,7 +261,7 @@
                     <th>Lines</th>
                 </tr></thead>
                 <tbody>
-                    <? for k, v in pairs( self:get( 'debug_stack' ) ) do ?>
+                    <? for k, v in pairs(self:get('debug_stack')) do ?>
                         <tr data-stack="<?=k ?>">
                             <td><?=v.file ?></td>
                             <td><?=v.data.time ?>ms</td>
@@ -274,7 +274,7 @@
                                     <th>Time</th>
                                     <th>Lines</th>
                                 </tr>
-                                <? for c, d in pairs( v.data.funcs ) do ?>
+                                <? for c, d in pairs(v.data.funcs) do ?>
                                     <tr>
                                         <td><?=d.name ?></td>
                                         <td><?=d.time ?>ms</td>
@@ -288,7 +288,7 @@
                                     <th>Time</th>
                                     <th>Count</th>
                                 </tr>
-                                <? for c, d in pairs( v.data.line_counts ) do ?>
+                                <? for c, d in pairs(v.data.line_counts) do ?>
                                     <tr>
                                         <td><?=d.line ?></td>
                                         <td><?=d.time ?>ms</td>
@@ -315,16 +315,16 @@
                 <tbody>
                     <tr>
                         <td>Request Time<br /><small>(app + luawa)</small></td>
-                        <td><span><?=self:get( 'debug_request_time' ) ?>ms</span></td>
+                        <td><span><?=self:get('debug_request_time') ?>ms</span></td>
                     </tr><tr>
                         <td>App Time</td>
-                        <td><span><?=self:get( 'debug_app_time' ) ?>ms</span></td>
+                        <td><span><?=self:get('debug_app_time') ?>ms</span></td>
                     </tr><tr>
                         <td>Luawa Time</td>
-                        <td><span><?=self:get( 'debug_luawa_time' ) ?>ms</span></td>
+                        <td><span><?=self:get('debug_luawa_time') ?>ms</span></td>
                     </tr><tr>
                         <td>Debug Time</td>
-                        <td><span><?=self:get( 'debug_debug_time' ) ?>ms</span></td>
+                        <td><span><?=self:get('debug_debug_time') ?>ms</span></td>
                     </tr><tr>
                         <td>Hostname</td>
                         <td><?=luawa.request.hostname ?>:<?=luawa.request.hostport ?></td>
@@ -338,7 +338,7 @@
                     <tr>
                         <th colspan="2">Cookies</th>
                     </tr>
-                    <? for k, v in pairs( luawa.header:getCookies() ) do ?>
+                    <? for k, v in pairs(luawa.header:getCookies()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -347,7 +347,7 @@
                     <tr>
                         <th colspan="2">GET Data</th>
                     </tr>
-                    <? for k, v in pairs( luawa.request:gets() ) do ?>
+                    <? for k, v in pairs(luawa.request:gets()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -356,7 +356,7 @@
                     <tr>
                         <th colspan="2">POST data</th>
                     </tr>
-                    <? for k, v in pairs( luawa.request:posts() ) do ?>
+                    <? for k, v in pairs(luawa.request:posts()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -365,7 +365,7 @@
                     <tr>
                         <th colspan="2">Headers</th>
                     </tr>
-                    <? for k, v in pairs( luawa.header:getHeaders() ) do ?>
+                    <? for k, v in pairs(luawa.header:getHeaders()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -386,10 +386,10 @@
                         <td><span><?=luawa.version ?></span></td>
                     </tr><tr>
                         <td>Nginx Version</td>
-                        <td><span><?=self:get( 'nginx_version' ) ?></span></td>
+                        <td><span><?=self:get('nginx_version') ?></span></td>
                     </tr><tr>
                         <td>Nginx-Lua Version</td>
-                        <td><span><?=self:get( 'nginx_lua_version' ) ?></span></td>
+                        <td><span><?=self:get('nginx_lua_version') ?></span></td>
                     </tr><tr>
                         <th colspan="2">Cache</th>
                     </tr><tr>
@@ -397,24 +397,24 @@
                         <td><span><? if luawa.cache then ?>true<? else ?>false<? end ?></span></td>
                     </tr><tr>
                         <td>App Files</td>
-                        <td><?=self:get( 'debug_cached_files' ) ?></td>
+                        <td><?=self:get('debug_cached_files') ?></td>
                     </tr><tr>
                         <td>Template Template</td>
-                        <td><?=self:get( 'debug_cached_templates' ) ?></td>
+                        <td><?=self:get('debug_cached_templates') ?></td>
                     </tr><tr>
                         <th colspan="2">Session Objects</th>
                     </tr><tr>
                         <td>Requests Served</td>
-                        <td><span><?=luawa.requests:get( 'success' ) ?></span></td>
+                        <td><span><?=luawa.requests:get('success') ?></span></td>
                     </tr><tr>
                         <td>Errors Served</td>
-                        <td><span><?=luawa.requests:get( 'error' ) ?></span></td>
+                        <td><span><?=luawa.requests:get('error') ?></span></td>
                     </tr><tr>
                         <td>Session</td>
-                        <td><?=#ngx.shared[luawa.shm_prefix .. 'session']:get_keys( 0 ) ?></td>
+                        <td><?=#ngx.shared[luawa.shm_prefix .. 'session']:get_keys(0) ?></td>
                     </tr><tr>
                         <td>User</td>
-                        <td><?=#ngx.shared[luawa.shm_prefix .. 'user']:get_keys( 0 ) ?></td>
+                        <td><?=#ngx.shared[luawa.shm_prefix .. 'user']:get_keys(0) ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -432,22 +432,22 @@
         'use strict';
 
         //core
-        var html = document.querySelector( 'html' ),
-            debug = document.querySelector( '#luawa_debug' ),
-            debug_button = document.querySelector( '#luawa_debug_button' ),
-            debug_resizer = document.querySelector( '#luawa_debug_resizer' );
+        var html = document.querySelector('html'),
+            debug = document.querySelector('#luawa_debug'),
+            debug_button = document.querySelector('#luawa_debug_button'),
+            debug_resizer = document.querySelector('#luawa_debug_resizer');
 
         //toggle the debug
         function debug_toggle() {
             //if displayed
-            if( debug.style.display == 'block' ) {
+            if(debug.style.display == 'block') {
                 debug.style.display = 'none';
-                sessionStorage.setItem( 'luawa_debug', 'false' );
+                sessionStorage.setItem('luawa_debug', 'false');
                 debug_button.innerHTML = 'debug &uarr;';
             //if not displayed
             } else {
                 debug.style.display = 'block';
-                sessionStorage.setItem( 'luawa_debug', 'true' );
+                sessionStorage.setItem('luawa_debug', 'true');
                 debug_button.innerHTML = 'debug &darr;';
             }
 
@@ -455,102 +455,102 @@
         }
 
         //toggle if saved
-        if( sessionStorage.getItem( 'luawa_debug' ) == 'true' ) {
+        if(sessionStorage.getItem('luawa_debug') == 'true') {
             debug_toggle();
         }
 
         //stop scrolling when over debug (annoying)
-        debug.addEventListener( 'mouseover', function() {
+        debug.addEventListener('mouseover', function() {
             document.body.style.overflow = 'hidden';
         });
-        debug.addEventListener( 'mouseout', function() {
+        debug.addEventListener('mouseout', function() {
             document.body.style.overflow = 'auto';
         });
 
         //resize if saved
-        if( sessionStorage.getItem( 'luawa_debug_top' )) {
-            debug.style.top = sessionStorage.getItem( 'luawa_debug_top' ) + 'px';
+        if(sessionStorage.getItem('luawa_debug_top')) {
+            debug.style.top = sessionStorage.getItem('luawa_debug_top') + 'px';
         }
 
         //hacky- but we need the height
         var height = debug.offsetTop;
-        if( height == 0 ) {
+        if(height == 0) {
             debug_toggle();
             height = debug.offsetTop;
             debug_toggle();
         }
         //resize debug
         var mouse_y;
-        var mouse_over = function( ev ) {
+        var mouse_over = function(ev) {
             ev.preventDefault();
-            if( !mouse_y ) {
+            if(!mouse_y) {
                 mouse_y = ev.clientY;
             }
             var diff = ev.clientY - mouse_y;
             var top = height + diff;
-            if( top < 0 )
+            if(top < 0)
                 top = 0;
             debug.style.top = top + 'px';
-            html.style.marginBottom = ( window.innerHeight - top ) + 'px';
-            sessionStorage.setItem( 'luawa_debug_top', top );
+            html.style.marginBottom = (window.innerHeight - top) + 'px';
+            sessionStorage.setItem('luawa_debug_top', top);
         };
-        debug_resizer.addEventListener( 'mousedown', function( ev ) {
-            window.addEventListener( 'mousemove', mouse_over );
+        debug_resizer.addEventListener('mousedown', function(ev) {
+            window.addEventListener('mousemove', mouse_over);
         });
-        window.addEventListener( 'mouseup', function( ev ) {
-            window.removeEventListener( 'mousemove', mouse_over );
+        window.addEventListener('mouseup', function(ev) {
+            window.removeEventListener('mousemove', mouse_over);
         });
-        html.style.marginBottom = ( window.innerHeight - height ) + 'px';
+        html.style.marginBottom = (window.innerHeight - height) + 'px';
 
         //toggle debug
-        debug_button.addEventListener( 'click', function( ev ) {
+        debug_button.addEventListener('click', function(ev) {
             ev.preventDefault();
             debug_toggle();
         });
 
 
         //tab buttons
-        var app_data_buttons = document.querySelectorAll( '#luawa_debug h4 a[data-tab-id]' );
+        var app_data_buttons = document.querySelectorAll('#luawa_debug h4 a[data-tab-id]');
         //button clicks
-        for( var i=0; i<app_data_buttons.length; i++ ) {
-            app_data_buttons[i].addEventListener( 'click', function( ev ) {
+        for(var i=0; i<app_data_buttons.length; i++) {
+            app_data_buttons[i].addEventListener('click', function(ev) {
                 ev.preventDefault();
-                var buttons = this.parentNode.querySelectorAll( 'a' );
-                for( var i =0; i<buttons.length; i++ ) {
-                    buttons[i].classList.remove( 'active' );
+                var buttons = this.parentNode.querySelectorAll('a');
+                for(var i =0; i<buttons.length; i++) {
+                    buttons[i].classList.remove('active');
                 }
                 this.className = 'active';
 
                 var sub_block = this.parentNode.parentNode;
-                var tabs = sub_block.querySelectorAll( '.luawa_sublock' );
-                for( var i=0; i<tabs.length; i++ ) {
+                var tabs = sub_block.querySelectorAll('.luawa_sublock');
+                for(var i=0; i<tabs.length; i++) {
                     tabs[i].style.display = 'none';
                 }
-                var tab = document.querySelector( '.' + this.getAttribute( 'data-tab-id' ) );
+                var tab = document.querySelector('.' + this.getAttribute('data-tab-id'));
                 tab.style.display = 'block';
 
-                var open_tabs = JSON.parse( sessionStorage.getItem( 'luawa_tabs' )) || {};
-                if( typeof open_tabs != 'object' ) open_tabs = {};
-                open_tabs[sub_block.id] = this.getAttribute( 'data-tab-id' );
-                sessionStorage.setItem( 'luawa_tabs', JSON.stringify( open_tabs ));
+                var open_tabs = JSON.parse(sessionStorage.getItem('luawa_tabs')) || {};
+                if(typeof open_tabs != 'object') open_tabs = {};
+                open_tabs[sub_block.id] = this.getAttribute('data-tab-id');
+                sessionStorage.setItem('luawa_tabs', JSON.stringify(open_tabs));
             });
         }
 
         //remember open tabs
-        var tabs = JSON.parse( sessionStorage.getItem( 'luawa_tabs' )) || {};
-        if( typeof tabs != 'object' ) tabs = {};
-        for( var key in tabs ) {
-            var $el = document.querySelector( '#' + key + ' h4 a[data-tab-id=' + tabs[key] + ']' );
+        var tabs = JSON.parse(sessionStorage.getItem('luawa_tabs')) || {};
+        if(typeof tabs != 'object') tabs = {};
+        for(var key in tabs) {
+            var $el = document.querySelector('#' + key + ' h4 a[data-tab-id=' + tabs[key] + ']');
             $el.click();
         }
 
 
         //profiler
-        var files = document.querySelectorAll( '.luawa_stack tbody tr[data-stack]' );
-        for( var i=0; i<files.length; i++ ) {
-            files[i].addEventListener( 'click', function( ev ) {
-                var rows = document.querySelector( '.luawa_stack tbody .luawa_stack_' + this.getAttribute( 'data-stack' ) );
-                if( this.open ) {
+        var files = document.querySelectorAll('.luawa_stack tbody tr[data-stack]');
+        for(var i=0; i<files.length; i++) {
+            files[i].addEventListener('click', function(ev) {
+                var rows = document.querySelector('.luawa_stack tbody .luawa_stack_' + this.getAttribute('data-stack'));
+                if(this.open) {
                     rows.style.display = 'none';
                     this.open = false;
                 } else {

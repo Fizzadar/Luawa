@@ -3,7 +3,9 @@
 -- Desc: deals with session management (memory-based, shared between ngx workers)
 
 local table = table
+
 local json = require('cjson.safe')
+
 
 local session = {
     config = {
@@ -31,7 +33,7 @@ end
 --generate & set an ID
 function session:generateId()
     --generate random id
-    local id = self.utils.digest(self.utils.randomString(32))
+    local id = self.utils.digest(self.utils.random_string(32))
 
     --send to user via cookie (expires in 24h)
     self.header:setCookie('luawa_sessionid', id, self.config.expire)
@@ -75,7 +77,7 @@ function session:getToken()
     local token = self:get('token')
     --generate token
     if not token then
-        token = self.utils.randomString(16)
+        token = self.utils.random_string(16)
         self:set('token', token)
     end
 

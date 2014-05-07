@@ -6,21 +6,23 @@ local type = type
 local tostring = tostring
 local pairs = pairs
 local string = string
+
 local json = require('cjson.safe')
 local hasher = require(luawa.root .. 'luawa/lib/sha512')
 local random = require(luawa.root .. 'luawa/lib/random')
 local str = require(luawa.root .. 'luawa/lib/string')
 local luawa = luawa
 
+
 local utils = {}
 
 -- Copy/duplicate a table
-function utils.tableCopy(table)
-    local function tableCopy(table)
+function utils.table_copy(table)
+    local function table_copy(table)
         local copy = {}
         for k, v in pairs(table) do
             if type(v) == 'table' then
-                copy[k] = tableCopy(v)
+                copy[k] = table_copy(v)
             else
                 copy[k] = v
             end
@@ -29,12 +31,12 @@ function utils.tableCopy(table)
         return copy
     end
 
-    return tableCopy(table)
+    return table_copy(table)
 end
 
 -- Return tables and any number of sub-tables as a string
-function utils.tableString(table, level)
-    local function tableString(table, level)
+function utils.table_string(table, level)
+    local function table_string(table, level)
         --not a table?
         if type(table) ~= 'table' then return tostring(table) end
 
@@ -48,18 +50,18 @@ function utils.tableString(table, level)
             end
             str = str .. '\n' .. k .. ' = ' .. tostring(v)
             if type(v) == 'table' then
-                str = str .. tableString(v, level + 4)
+                str = str .. table_string(v, level + 4)
             end
         end
 
         return str
     end
 
-    return tableString(table, level)
+    return table_string(table, level)
 end
 
 -- Checks if a table has a list of keys
-function utils.tableKeys(table, keys)
+function utils.table_keys(table, keys)
     for k, v in pairs(keys) do
         if not table[v] then return false end
     end
@@ -68,7 +70,7 @@ function utils.tableKeys(table, keys)
 end
 
 -- HTML => entities
-function utils.htmlEnts(str)
+function utils.html_ents(str)
     local entities = {
         ['¡'] = '&iexcl;',
         ['¢'] = '&cent;',
@@ -178,24 +180,24 @@ function utils.htmlEnts(str)
 end
 
 -- Alphanumeric-ify string
-function utils.alphaNumerify(str)
+function utils.alpha_numerify(str)
     return str:gsub('%W', '')
 end
 
 -- Capitalize first character
-function utils.capitalizeFirst(str)
+function utils.capitalize_first(str)
     return str:gsub('^%l', string.upper)
 end
 
 -- Check an email is valid (@-check only http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/)
-function utils.isEmail(str)
+function utils.is_email(str)
     if str:match('@') then
         return true
     end
 end
 
 -- Check an url
-function utils.isUrl(str)
+function utils.is_url(str)
     if str:match('^https?://') then
         return true
     end
@@ -208,19 +210,19 @@ function utils.trim(str, chars)
 end
 
 -- Trim right string (remove chars from right end)
-function utils.trimRight(str, chars)
+function utils.trim_right(str, chars)
     if not chars then chars = '%s' end
     return str:match('^(.-)[' .. chars .. ']*$')
 end
 
 -- Trim left string (remove chars from left end)
-function utils.trimLeft(str, chars)
+function utils.trim_left(str, chars)
     if not chars then chars = '%s' end
     return str:match('^[' .. chars .. ']*(.-)$')
 end
 
 -- Random string
-function utils.randomString(length)
+function utils.random_string(length)
     return str.to_hex(random.bytes(length))
 end
 
@@ -232,17 +234,17 @@ function utils.digest(string)
 end
 
 -- URL decode
-function utils.urlDecode(str)
+function utils.url_decode(str)
     return ngx.unescape_uri(str)
 end
 
 -- URL encode
-function utils.urlEncode(str)
+function utils.url_encode(str)
     return ngx.escape_uri(str)
 end
 
 -- JSON Prepare
-function utils.jsonPrepare(object)
+function utils.json_prepare(object)
     local function prepare(object)
         local out, type = {}, type(object)
         if type == 'table' then
@@ -264,13 +266,13 @@ function utils.jsonPrepare(object)
 end
 
 -- JSON Encode
-function utils.jsonEncode(object)
-    return json.encode(utils.jsonPrepare(object))
+function utils.json_encode(object)
+    return json.encode(utils.json_prepare(object))
 end
 
 -- JSON decode
-function utils.jsonDecode(str)
-    return json.decode(utils.jsonPrepare(str))
+function utils.json_decode(str)
+    return json.decode(utils.json_prepare(str))
 end
 
 -- Explode, credit: http://richard.warburton.it
