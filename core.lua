@@ -22,7 +22,6 @@ local luawa = {
         'request',
         'database',
         'debug',
-        'header',
         'session',
         'template',
         'user',
@@ -32,7 +31,6 @@ local luawa = {
     module_starts = {
         'debug',
         'request',
-        'header',
         'session',
         'template'
     },
@@ -40,8 +38,8 @@ local luawa = {
     module_ends = {
         'debug',
         'database',
-        'header',
-        'template'
+        'template',
+        'request'
     }
 }
 
@@ -163,10 +161,8 @@ function luawa:processFile(file)
     local func, err = loadfile(self.root .. file .. '.lua')
     if not func then return self:error(500, err) end
 
-    --save in cache
-    if self.cache then
-        self.cache[file] = func
-    end
+    --save to cache
+    self.cache[file] = func
 
     --run it
     return self:processFunction(func, file)

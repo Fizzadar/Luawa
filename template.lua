@@ -133,10 +133,8 @@ function template:load(file, inline)
         end
     end
 
-    --save if cache
-    if cache then
-        self.cache[file] = func
-    end
+    --save to cache
+    self.cache[file] = func
 
     --run it
     return self:processFunction(func, file)
