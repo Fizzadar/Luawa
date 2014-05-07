@@ -24,8 +24,8 @@ local user = {
 
 -- Init
 function user:_init()
-    self.db = luawa.database
-    self.head = luawa.header
+    self.database = luawa.database
+    self.request = luawa.request
     self.utils = luawa.utils
 end
 
@@ -51,7 +51,7 @@ end
 -- Start password reset
 function user:resetPassword(email)
     --get user in question
-    local user = self.db:select(
+    local user = self.database:select(
         self.config.dbprefix .. 'user', true,
         { email = email }
    )
@@ -63,7 +63,7 @@ function user:resetPassword(email)
     local password_reset_key = self:generateKey(self.utils.random_string(32))
 
     --add key + time to database
-    local status, err = self.db:update(
+    local status, err = self.database:update(
         self.config.dbprefix .. 'user',
         {
             password_reset_key = password_reset_key,
@@ -80,7 +80,7 @@ end
 -- Process reset password
 function user:resetPasswordLogin(email, key)
     --check key+email
-    local user = self.db:select(
+    local user = self.database:select(
         self.config.dbprefix .. 'user', true,
         { email = email, password_reset_key = key }
    )
@@ -89,7 +89,7 @@ function user:resetPasswordLogin(email, key)
     end
 
     --remove key+time from database
-    local status, err = self.db:update(
+    local status, err = self.database:update(
         self.config.dbprefix .. 'user',
         {
             password_reset_key = '',
@@ -132,7 +132,7 @@ function user:register(email, password, name, group)
     end
 
     --insert user
-    local result, err = self.db:insert(
+    local result, err = self.database:insert(
         self.config.dbprefix .. 'user',
         fields,
         { user }
@@ -145,7 +145,7 @@ end
 -- Login a user
 function user:login(email, password, hashed)
     --get user
-    local user, err = self.db:select(
+    local user, err = self.database:select(
         self.config.dbprefix .. 'user', '*',
         { email = email }
    )
@@ -178,7 +178,7 @@ function user:login(email, password, hashed)
 
         --set key cookies
         for i = 1, self.config.keys do
-            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
+            self.request:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
@@ -203,7 +203,7 @@ function user:logout()
 
     --delete key cookies
     for i = 1, self.config.keys do
-        self.head:deleteCookie(self.config.prefix .. 'key' .. i)
+        self.request:deleteCookie(self.config.prefix .. 'key' .. i)
     end
 
     --always succeeds
@@ -217,7 +217,7 @@ function user:checkLogin()
     --build db where table + shm key
     local wheres, key = {}, ''
     for i = 1, self.config.keys do
-        local bit = self.head:getCookie(self.config.prefix .. 'key' .. i)
+        local bit = self.request.cookie[self.config.prefix .. 'key' .. i]
         if not bit then return false end
         wheres['key' .. i] = bit
         key = key .. bit
@@ -230,14 +230,14 @@ function user:checkLogin()
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
+            self.request:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
     end
 
     --get data from mysql (fallback)
-    local user, err = self.db:select(
+    local user, err = self.database:select(
         self.config.dbprefix .. 'user', '*',
         wheres,
         { order = 'id ASC' },
@@ -252,7 +252,7 @@ function user:checkLogin()
 
         --set key cookies again (to stop expiration)
         for i = 1, self.config.keys do
-            self.head:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
+            self.request:setCookie(self.config.prefix .. 'key' .. i, ngx.ctx.user['key' .. i], self.config.expire)
         end
 
         return true
@@ -275,7 +275,7 @@ function user:checkPermission(permission)
     end
 
     --sql query to check
-    local check = self.db:query([[
+    local check = self.database:query([[
 SELECT ]] .. self.config.dbprefix .. [[user_permissions.permission FROM ]] .. self.config.dbprefix .. [[user_permissions, ]] .. self.config.dbprefix .. [[user_groups
 WHERE ]] .. self.config.dbprefix .. [[user_permissions.permission = "]] .. permission .. [["
 AND ]] .. self.config.dbprefix .. [[user_permissions.group = ]] .. self.config.dbprefix .. [[user_groups.id
@@ -314,7 +314,7 @@ function user:setData(fields)
         end
     end
     --get database result
-    local result, err = self.db:update(
+    local result, err = self.database:update(
         self.config.dbprefix .. 'user', fields,
         { id = ngx.ctx.user.id }
    )

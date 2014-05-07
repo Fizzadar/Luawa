@@ -338,7 +338,7 @@
                     <tr>
                         <th colspan="2">Cookies</th>
                     </tr>
-                    <? for k, v in pairs(luawa.header:getCookies()) do ?>
+                    <? for k, v in pairs(luawa.request:cookies()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -365,7 +365,7 @@
                     <tr>
                         <th colspan="2">Headers</th>
                     </tr>
-                    <? for k, v in pairs(luawa.header:getHeaders()) do ?>
+                    <? for k, v in pairs(luawa.request:headers()) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>

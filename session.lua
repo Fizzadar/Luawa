@@ -15,14 +15,14 @@ local session = {
 
 -- Init
 function session:_init()
-    self.header = luawa.header
+    self.request = luawa.request
     self.utils = luawa.utils
 end
 
 -- Request start
 function session:_start()
     --get session id, or set
-    ngx.ctx.session_id = self.header:getCookie('luawa_sessionid') or self:generateId()
+    ngx.ctx.session_id = self.request.cookie.luawa_sessionid or self:generateId()
 
     --is there a session in the memory? set to empty json string
     if not ngx.shared[luawa.shm_prefix .. 'session']:get(ngx.ctx.session_id) then
@@ -36,7 +36,7 @@ function session:generateId()
     local id = self.utils.digest(self.utils.random_string(32))
 
     --send to user via cookie (expires in 24h)
-    self.header:setCookie('luawa_sessionid', id, self.config.expire)
+    self.request:setCookie('luawa_sessionid', id, self.config.expire)
 
     return id
 end
