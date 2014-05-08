@@ -8,6 +8,7 @@
 + removed some unnecessary crap from `layout.sql`
 + slight tweaking of internal caching/variable names
 + Show errors on `luawa:error` when debug enabled
++ Support for `puts` and `deletes` tables in config alongside `get`, `post`
 
 
 ### v0.9.4
