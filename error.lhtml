@@ -4,7 +4,7 @@
 <html>
 <head>
     <!--meta-->
-    <title>500 Server Error</title>
+    <title><?=self:get('error_type') ?> Server Error</title>
     <meta charset="UTF-8" />
     <meta name="keywords" content="" />
     <meta name="description" content="" />
@@ -51,6 +51,17 @@
                 float: left;
                 width: 50%;
             }
+
+        div#debug {
+            float: left;
+            margin: 40px;
+        }
+            div#debug h3 {
+                margin: 0;
+                font-size: 18px;
+                font-family: Courier;
+                font-weight: normal;
+            }
     </style>
 
     <!--script-->
@@ -70,5 +81,13 @@
 
     </div><!--end top-->
 
+    <? if self:get('error_message') then ?>
+        <div id="debug">
+            <h3>
+                Debug enabled:<br />
+                <?=self:get('error_message') ?>
+            </h3>
+        </div>
+    <? end ?>
 </body>
 </html>
