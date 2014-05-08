@@ -227,6 +227,11 @@ function luawa:error(type, message)
     self.response = ''
     self.template.config.dir = 'luawa/'
     self.template.config.minimize = false
+    self.template:set('error_type', type)
+    --show messages when debugging
+    if self.debug.config.enabled then
+        self.template:set('error_message', message)
+    end
     self.template:load('error')
 
     --restore template config
