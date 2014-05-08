@@ -121,7 +121,7 @@ end
 
 -- Prepare a request
 function luawa:prepareRequest()
-    local method = ngx.req.get_method()
+    local method = ngx.req.get_method():lower() .. 's'
     local request = ngx.req.get_uri_args().request or false
     if type(request) == 'table' then
         request = request[1]
@@ -129,15 +129,8 @@ function luawa:prepareRequest()
 
     --find our response
     local file
-    if method == 'GET' then
-        file = self.gets[request] or self.gets.default
-    elseif method == 'POST' then
-        file = self.posts[request] or self.posts.default
-    end
-
-    --invalid request
-    if not file then
-        return false
+    if self[method] then
+        file = self[method][request] or self[method].default
     end
 
     --start modules
