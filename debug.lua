@@ -57,7 +57,7 @@ function debug:_start()
             local info = lua_debug.getinfo(2)
             local a, b, path = info.source:find('^@' .. luawa.root .. '([^%s]+)$')
             if not path then
-                local a, b, func_name = info.source:find('^--luawa_file:([^\n]+)')
+                local a, b, func_name = info.source:find('\n--luawa_file:([^\n]+)')
                 path = func_name and func_name .. '.lhtml' or 'unknown'
             end
 

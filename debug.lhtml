@@ -338,7 +338,7 @@
                     <tr>
                         <th colspan="2">Cookies</th>
                     </tr>
-                    <? for k, v in pairs(luawa.request:cookies()) do ?>
+                    <? for k, v in pairs(luawa.request.cookie) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -347,7 +347,7 @@
                     <tr>
                         <th colspan="2">GET Data</th>
                     </tr>
-                    <? for k, v in pairs(luawa.request:gets()) do ?>
+                    <? for k, v in pairs(luawa.request.get) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -356,7 +356,7 @@
                     <tr>
                         <th colspan="2">POST data</th>
                     </tr>
-                    <? for k, v in pairs(luawa.request:posts()) do ?>
+                    <? for k, v in pairs(luawa.request.post) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
@@ -365,7 +365,7 @@
                     <tr>
                         <th colspan="2">Headers</th>
                     </tr>
-                    <? for k, v in pairs(luawa.request:headers()) do ?>
+                    <? for k, v in pairs(luawa.request.header) do ?>
                         <tr>
                             <td><?=k ?></td>
                             <td><?=v ?></td>
