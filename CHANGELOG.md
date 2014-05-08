@@ -7,6 +7,7 @@
 + format to use `(arg)` over `( arg )`
 + removed some unnecessary crap from `layout.sql`
 + slight tweaking of internal caching/variable names
++ Show errors on `luawa:error` when debug enabled
 
 
 ### v0.9.4
