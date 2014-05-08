@@ -191,8 +191,7 @@ function template:processFile(file)
     if self.config.minimize then code = code:gsub('%s+', ' ') end
 
     --prepend bits
-    local name = '--luawa_file:' .. file .. '\n'
-    code = name .. 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
+    code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
     --replace <?=vars?>
     code = code:gsub('<%?=([#{},/_%+\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. self:toString(%1) .. [[')
     --replace <??=vars?>
@@ -202,7 +201,8 @@ function template:processFile(file)
     --replace ?> to stop lua and start output (in table)
     code = code:gsub('%?>', ' _output = _output .. [[')
     --close final output and return concat of the table
-    code = code .. ' ]] return _output'
+    local name = '\n--luawa_file:' .. file .. '\n'
+    code = code .. ' ]]\n' .. name .. '\nreturn _output'
 
     return code
 end
