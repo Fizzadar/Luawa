@@ -4,6 +4,7 @@
 
 + [Breaking Change] removed `header.lua` and moved all functions to `request.lua`
 + [Breaking Change] `request[header|cookie|get|post]` are all immutable
++ [Breaking Change] `luawa:setConfig(root, config)` now takes a table as the second argument
 + format to use `(arg)` over `( arg )`
 + removed some unnecessary crap from `layout.sql`
 + slight tweaking of internal caching/variable names
