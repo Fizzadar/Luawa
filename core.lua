@@ -46,14 +46,10 @@ local luawa = {
 }
 
 -- Set the config
-function luawa:setConfig(root, file)
+function luawa:setConfig(root, config)
     if self.init then return end
 
     self.root = root or ''
-    self.config_file = file or 'config'
-
-    --load the config file (must return)
-    local config = require(self.root .. self.config_file)
 
     --include modules
     for k, v in pairs(self.modules) do
