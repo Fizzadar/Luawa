@@ -40,11 +40,13 @@ To process an incoming request `luawa:run()` is called, which takes a number of 
 
 When building Luawa I wanted to be able to create 'app files' as such:
 
+```lua
     local template = luawa.template
     template:set('key', 'value')
     template:load('header')
     template:load('content')
     template:load('footer')
+```
 
 However to take advantage of NginxLua's code cache (essential for avoiding blocking io, race conditions and speed) these files have to be `required`. To achieve this Luawa wraps app & template files in a function, which is returned at the end of the file.
 
