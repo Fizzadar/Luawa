@@ -11,14 +11,15 @@ local table = table
 local io = io
 
 local ngx = ngx
-local luawa = luawa
+local luawa = require('luawa.core')
 
 
 local template = {
     config = {
         dir = ''
     },
-    cache = {}
+    cache = {},
+    env = {}
 }
 
 -- Init
@@ -144,6 +145,13 @@ end
 -- Run a function
 function template:processFunction(func, file)
     --call the function safely
+    local env = _G
+    env.self = self
+    env.luawa = luawa
+    for k, v in pairs(self.env) do
+        env[k] = v
+    end
+    setfenv(func, env)
     local status, err = pcall(func)
 
     --if ok, add to output
@@ -155,7 +163,11 @@ function template:processFunction(func, file)
             return true
         end
     else
-        return luawa:error(500, 'Template: ' .. (file or 'unkown') .. ' :: ' .. err)
+        if self.config.dir == 'luawa' then
+            return self:error(500, (file .. '.lhtml' or 'unkown') .. ' :: ' .. err)
+        else
+            return luawa:error(500, 'Template: ' .. (file or 'unkown') .. ' :: ' .. err)
+        end
     end
 end
 
@@ -171,27 +183,25 @@ end
 
 --turn file => lua
 function template:processFile(file)
-    local function exit(message)
-        if self.config.dir == 'luawa/' then
-            return self:error(500, message)
-        end
-        return luawa:error(500, message)
+    local code
+    if self.config.dir == 'luawa' then
+        code = require('luawa.template.' .. file)
+    else
+        --read template file
+        local f, err = io.open(luawa.root .. self.config.dir .. file .. '.lhtml', 'r')
+        if not f then return luawa:error(500, 'Template: ' .. file .. ' :: Cant open/access file: ' .. err) end
+        --read the file
+        code, err = f:read('*a')
+        if not code then return luawa:error(500, 'Template: ' .. file .. ' :: File read error: ' .. err) end
+        --close file
+        f:close()
     end
-
-    --read template file
-    local f, err = io.open(luawa.root .. self.config.dir .. file .. '.lhtml', 'r')
-    if not f then return exit('Template: ' .. file .. ' :: Cant open/access file: ' .. err) end
-    --read the file
-    local code, err = f:read('*a')
-    if not code then return exit('Template: ' .. file .. ' :: File read error: ' .. err) end
-    --close file
-    f:close()
 
     --minimize html? will probably break javascript!
     if self.config.minimize then code = code:gsub('%s+', ' ') end
 
     --prepend bits
-    code = 'local self, _output = luawa.template, "" _output = _output .. [[' .. code
+    code = 'local _output = "" _output = _output .. [[' .. code
     --replace <?=vars?>
     code = code:gsub('<%?=([#{},/_%+\'%[%]%:%.%a%s%d%(%)%*]+)%s%?>', ']] .. self:toString(%1) .. [[')
     --replace <??=vars?>

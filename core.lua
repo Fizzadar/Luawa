@@ -13,9 +13,8 @@ local ngx = ngx
 
 
 local luawa = {
-    version = '0.9.5-unreleased',
+    version = '1.0.0-dev',
     --base status
-    init = false,
     requests = ngx.shared.requests,
     --function cache
     cache = {},
@@ -45,16 +44,18 @@ local luawa = {
     }
 }
 
--- Set the config
-function luawa:setConfig(root, config)
-    if self.init then return end
 
-    self.root = root or ''
+-- Start luawa
+function luawa:init()
+    local config = require(ngx.var.config_root .. '.luawa')
 
     --include modules
     for k, v in pairs(self.modules) do
-        self[v] = require(self.root .. 'luawa/' .. v)
+        self[v] = require('luawa.' .. v)
     end
+
+    --app root
+    self.root = ngx.var.app_root .. '/'
 
     --set get/post
     self.gets = config.gets or {}
@@ -73,7 +74,7 @@ function luawa:setConfig(root, config)
     self.limit_post = config.limit_post or 100
 
     --caching?
-    self.caching = false
+    self.caching = config.cache or false
 
     --module config
     for k, v in pairs(self.modules) do
@@ -92,25 +93,24 @@ function luawa:setConfig(root, config)
     end
 
     --set on_abort
-    local status, err = ngx.on_abort(self.endRequest)
+    ngx.on_abort(self.endRequest)
 
-    self.init = true
-    return true
+    return self
 end
 
 
 -- Run luawa
 function luawa:run()
-    --setup fail?
+    --prepare luawa
     local file, err = self:prepareRequest()
     if not file then
         return self:error(500, 'Invalid Request')
     end
 
-    --go!
-    self:processRequest(file)
+    --pass to luawa to process request
+    self:processFile(file)
 
-    --end
+    --end luawa request
     self:endRequest()
 end
 
@@ -214,7 +214,7 @@ function luawa:error(type, message)
     --hacky
     local old_dir, old_minimize = self.template.config.dir, self.template.config.minimize
     self.response = ''
-    self.template.config.dir = 'luawa/'
+    self.template.config.dir = 'luawa'
     self.template.config.minimize = false
     self.template:set('error_type', type)
     --show messages when debugging

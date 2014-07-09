@@ -6,6 +6,8 @@ local setmetatable = setmetatable
 
 local ngx = ngx
 
+local luawa = require('luawa.core')
+
 
 local request = {}
 

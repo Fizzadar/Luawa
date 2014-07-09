@@ -1,3 +1,6 @@
-#no cache file please
-cache/*.lua
 .DS_Store
+
+#example
+example/*_temp
+example/logs/*.log
+example/error.log

@@ -10,7 +10,7 @@ local tonumber = tonumber
 local lua_debug = debug
 
 local ffi = require('ffi')
-local luawa = luawa
+local luawa = require('luawa.core')
 
 
 --many thanks to John Graham-Cumming's lulip lua profiler:
@@ -171,7 +171,7 @@ function debug:_end()
 
         --load debug template
         local old_dir, old_minimize = template.config.dir, template.config.minimize
-        template.config.dir = 'luawa/'
+        template.config.dir = 'luawa'
         template.config.minimize = false
         template:load('debug')
         template.config.dir, template.config.minimize = old_dir, old_minimize

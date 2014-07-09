@@ -9,6 +9,8 @@ local pairs = pairs
 local ngx = ngx
 local json = require('cjson.safe')
 
+local luawa = require('luawa.core')
+
 
 local user = {
     config = {

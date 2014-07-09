@@ -8,10 +8,11 @@ local pairs = pairs
 local string = string
 
 local json = require('cjson.safe')
-local hasher = require(luawa.root .. 'luawa/lib/sha512')
-local random = require(luawa.root .. 'luawa/lib/random')
-local str = require(luawa.root .. 'luawa/lib/string')
-local luawa = luawa
+local hasher = require('luawa.lib.sha512')
+local random = require('luawa.lib.random')
+local str = require('luawa.lib.string')
+
+local luawa = require('luawa.core')
 
 
 local utils = {}

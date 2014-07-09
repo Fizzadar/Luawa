@@ -9,8 +9,8 @@ local table_insert = table.insert
 local tostring = tostring
 
 local ngx = ngx
-local luawa = luawa
-local mysql = require(luawa.root .. 'luawa/lib/mysql')
+local luawa = require('luawa.core')
+local mysql = require('luawa.lib.mysql')
 
 
 local database = {

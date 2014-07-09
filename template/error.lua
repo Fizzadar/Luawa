@@ -1,4 +1,4 @@
-<?
+local template = [[<?
     local debug = luawa.debug
 ?><!DOCTYPE html>
 <html>
@@ -90,4 +90,6 @@
         </div>
     <? end ?>
 </body>
-</html>
+</html>]]
+
+return template

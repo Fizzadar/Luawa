@@ -6,6 +6,8 @@ local table = table
 
 local json = require('cjson.safe')
 
+local luawa = require('luawa.core')
+
 
 local session = {
     config = {
