@@ -1,0 +1,41 @@
+daemon off;
+worker_processes 1;
+
+error_log error.log;
+pid pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    default_type  application/octet-stream;
+    lua_package_path '../../?.lua;?.lua';
+
+    lua_shared_dict cache_app 1m;
+    lua_shared_dict cache_template 1m;
+    lua_shared_dict session 1024m;
+    lua_shared_dict user 100m;
+    lua_shared_dict requests 1m;
+
+    server {
+        #set root for lua
+        set $app_root .;
+        set $config_root config;
+
+        #port & domains
+        listen 5000;
+        server_name _;
+
+        #dev mode
+        lua_code_cache on;
+        #shutdown properly
+        lua_check_client_abort on;
+
+        #default server dir
+        location / {
+            default_type 'text/html';
+            content_by_lua_file run.lua;
+        }
+    }
+}
